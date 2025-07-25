@@ -324,8 +324,10 @@ pub struct AppConfig {
 - [x] Add project validation logic
 
 ### Week 2: UI Restructure
-- [ ] Create new panel components (sessions, projects, stats)
-- [ ] Implement main layout redesign
+- [x] Create new panel components (sessions, projects, stats)
+- [x] Implement main layout redesign
+- [x] Integrate new App state with TUI system
+- [x] Connect keyboard shortcuts and event handling
 - [ ] Update existing components for new layout
 - [ ] Test basic rendering and navigation
 

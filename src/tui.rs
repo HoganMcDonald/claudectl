@@ -9,32 +9,22 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
 };
 
-use crate::components::{Footer, Header, QuickActions, SystemStatus, WorkflowPanel};
+use crate::app::{App, AppMode};
+use crate::components::{
+    Footer, Header, SessionsPanel, ProjectsPanel, StatsPanel,
+    HelpModal, FilePickerModal, ConfirmationModal
+};
 use std::{error::Error, io};
-
-#[derive(Default)]
-pub struct App {
-    pub should_quit: bool,
-}
-
-impl App {
-    pub fn new() -> App {
-        App::default()
-    }
-
-    pub fn quit(&mut self) {
-        self.should_quit = true;
-    }
-}
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
         terminal.draw(|f| ui(f, &app))?;
 
         if let Event::Key(key) = event::read()? {
-            match key.code {
-                KeyCode::Char('q') | KeyCode::Esc => app.quit(),
-                _ => {}
+            if let Err(err) = app.handle_key_event(key.code) {
+                // Handle app errors - for now just break on error
+                eprintln!("App error: {}", err);
+                break;
             }
         }
 
@@ -45,7 +35,7 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
     Ok(())
 }
 
-fn ui(f: &mut Frame, _app: &App) {
+fn ui(f: &mut Frame, app: &App) {
     // Main layout with modern spacing
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -59,29 +49,58 @@ fn ui(f: &mut Frame, _app: &App) {
 
     // Render components
     Header::render(f, main_chunks[0]);
-    render_main_content(f, main_chunks[1]);
+    render_main_content(f, main_chunks[1], app);
     Footer::render(f, main_chunks[2]);
+
+    // Render modals on top if active
+    match app.mode {
+        AppMode::HelpModal => {
+            HelpModal::render(f);
+        }
+        AppMode::FilePickerModal => {
+            if let Some(ref picker_state) = app.file_picker_state {
+                FilePickerModal::render(f, picker_state);
+            }
+        }
+        AppMode::ConfirmationModal(ref message) => {
+            ConfirmationModal::render(f, message);
+        }
+        _ => {}
+    }
 }
 
-fn render_main_content(f: &mut Frame, area: ratatui::prelude::Rect) {
-    // Split main area for better layout
+fn render_main_content(f: &mut Frame, area: ratatui::prelude::Rect, app: &App) {
+    // New 3-panel layout: Sessions (30%) | Projects (45%) | Stats (25%)
     let content_chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
+        .constraints([
+            Constraint::Percentage(30), // Sessions
+            Constraint::Percentage(45), // Projects  
+            Constraint::Percentage(25), // Stats
+        ])
         .split(area);
 
-    // Render workflow panel
-    WorkflowPanel::render(f, content_chunks[0]);
+    // Render the three main panels
+    SessionsPanel::render(
+        f, 
+        content_chunks[0], 
+        &app.data.sessions,
+        app.selected_session_index
+    );
 
-    // Right panel - Status & Info
-    let right_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(content_chunks[1]);
+    ProjectsPanel::render(
+        f, 
+        content_chunks[1], 
+        &app.data.projects,
+        app.selected_project_index
+    );
 
-    // Render status and actions components
-    SystemStatus::render(f, right_chunks[0]);
-    QuickActions::render(f, right_chunks[1]);
+    StatsPanel::render(
+        f, 
+        content_chunks[2], 
+        &app.data.stats,
+        &app.data.sessions
+    );
 }
 
 pub fn run() -> Result<(), Box<dyn Error>> {
@@ -93,7 +112,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     // Create app and run it
-    let app = App::new();
+    let app = App::new().map_err(|e| Box::new(e) as Box<dyn Error>)?;
     let res = run_app(&mut terminal, app);
 
     // Cleanup
