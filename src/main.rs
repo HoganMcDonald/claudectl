@@ -1,6 +1,7 @@
 mod cli;
 mod components;
 mod data;
+mod storage;
 mod tui;
 
 use cli::{Cli, Commands};
