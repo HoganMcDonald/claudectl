@@ -7,10 +7,9 @@ use ratatui::{
     Frame, Terminal,
     backend::{Backend, CrosstermBackend},
     layout::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
 };
+
+use crate::components::{Footer, Header, QuickActions, SystemStatus, WorkflowPanel};
 use std::{error::Error, io};
 
 #[derive(Default)]
@@ -47,35 +46,42 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
 }
 
 fn ui(f: &mut Frame, _app: &App) {
-    let chunks = Layout::default()
+    // Main layout with modern spacing
+    let main_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .margin(2)
+        .margin(1)
         .constraints([
-            Constraint::Length(3),
-            Constraint::Min(0),
-            Constraint::Length(3),
+            Constraint::Length(5), // Header
+            Constraint::Min(0),    // Main content
+            Constraint::Length(3), // Footer
         ])
         .split(f.size());
 
-    let header = Paragraph::new(vec![Line::from(vec![
-        Span::styled(
-            "claudectl",
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        ),
-        Span::raw(" - Multi-Agent Workflow Orchestrator"),
-    ])])
-    .block(Block::default().borders(Borders::ALL).title("Header"));
-    f.render_widget(header, chunks[0]);
+    // Render components
+    Header::render(f, main_chunks[0]);
+    render_main_content(f, main_chunks[1]);
+    Footer::render(f, main_chunks[2]);
+}
 
-    let main_content = Paragraph::new("Welcome to claudectl!\n\nThis is where your multi-agent workflows will be orchestrated.\n\nComing soon...")
-        .block(Block::default().borders(Borders::ALL).title("Workflows"));
-    f.render_widget(main_content, chunks[1]);
+fn render_main_content(f: &mut Frame, area: ratatui::prelude::Rect) {
+    // Split main area for better layout
+    let content_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
+        .split(area);
 
-    let footer = Paragraph::new("Press 'q' or ESC to quit")
-        .block(Block::default().borders(Borders::ALL).title("Controls"));
-    f.render_widget(footer, chunks[2]);
+    // Render workflow panel
+    WorkflowPanel::render(f, content_chunks[0]);
+
+    // Right panel - Status & Info
+    let right_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(content_chunks[1]);
+
+    // Render status and actions components
+    SystemStatus::render(f, right_chunks[0]);
+    QuickActions::render(f, right_chunks[1]);
 }
 
 pub fn run() -> Result<(), Box<dyn Error>> {

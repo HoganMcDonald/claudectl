@@ -1,4 +1,5 @@
 mod cli;
+mod components;
 mod tui;
 
 use cli::{Cli, Commands};
