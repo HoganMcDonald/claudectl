@@ -319,9 +319,9 @@ pub struct AppConfig {
 
 ### Week 1: Foundation
 - [x] Implement data structures and storage layer
-- [ ] Create enhanced App state management
-- [ ] Set up persistence with JSON storage
-- [ ] Add project validation logic
+- [x] Create enhanced App state management
+- [x] Set up persistence with JSON storage
+- [x] Add project validation logic
 
 ### Week 2: UI Restructure
 - [ ] Create new panel components (sessions, projects, stats)

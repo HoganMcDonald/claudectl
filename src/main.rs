@@ -1,3 +1,4 @@
+mod app;
 mod cli;
 mod components;
 mod data;
