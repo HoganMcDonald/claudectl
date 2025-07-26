@@ -12,8 +12,9 @@ use ratatui::{
 use crate::app::{App, AppMode};
 use crate::components::{
     Footer, Header, SessionsPanel, ProjectsPanel, StatsPanel,
-    HelpModal, FilePickerModal, ConfirmationModal
+    HelpModal, FilePickerModal, ConfirmationModal,
 };
+use crate::components::modals::ProjectInitModal;
 use std::{error::Error, io};
 
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
@@ -36,36 +37,48 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Resu
 }
 
 fn ui(f: &mut Frame, app: &App) {
-    // Main layout with modern spacing
-    let main_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(1)
-        .constraints([
-            Constraint::Length(3), // Header
-            Constraint::Min(0),    // Main content
-            Constraint::Length(3), // Footer
-        ])
-        .split(f.size());
-
-    // Render components
-    Header::render(f, main_chunks[0]);
-    render_main_content(f, main_chunks[1], app);
-    Footer::render(f, main_chunks[2]);
-
-    // Render modals on top if active
     match app.mode {
-        AppMode::HelpModal => {
-            HelpModal::render(f);
+        AppMode::ProjectInitModal => {
+            // Render project initialization modal with blank background
+            f.render_widget(
+                ratatui::widgets::Block::default().style(ratatui::style::Style::default().bg(ratatui::style::Color::Black)),
+                f.size()
+            );
+            ProjectInitModal::render(f, &app.project_init_name, app.project_init_cursor_visible);
         }
-        AppMode::FilePickerModal => {
-            if let Some(ref picker_state) = app.file_picker_state {
-                FilePickerModal::render(f, picker_state);
+        _ => {
+            // Render normal layout
+            let main_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(1)
+                .constraints([
+                    Constraint::Length(3), // Header
+                    Constraint::Min(0),    // Main content
+                    Constraint::Length(3), // Footer
+                ])
+                .split(f.size());
+
+            // Render components
+            Header::render(f, main_chunks[0]);
+            render_main_content(f, main_chunks[1], app);
+            Footer::render(f, main_chunks[2]);
+
+            // Render modals on top if active
+            match app.mode {
+                AppMode::HelpModal => {
+                    HelpModal::render(f);
+                }
+                AppMode::FilePickerModal => {
+                    if let Some(ref picker_state) = app.file_picker_state {
+                        FilePickerModal::render(f, picker_state);
+                    }
+                }
+                AppMode::ConfirmationModal(ref message) => {
+                    ConfirmationModal::render(f, message);
+                }
+                _ => {}
             }
         }
-        AppMode::ConfirmationModal(ref message) => {
-            ConfirmationModal::render(f, message);
-        }
-        _ => {}
     }
 }
 

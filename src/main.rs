@@ -2,6 +2,7 @@ mod app;
 mod cli;
 mod components;
 mod data;
+mod project_init;
 mod storage;
 mod tui;
 
