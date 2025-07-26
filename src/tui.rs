@@ -11,7 +11,7 @@ use ratatui::{
 
 use crate::app::{App, AppMode};
 use crate::components::{
-    Footer, Header, SessionsPanel, ProjectsPanel, StatsPanel,
+    Footer, Header, SessionsPanel,
     HelpModal, FilePickerModal, ConfirmationModal,
 };
 use crate::components::modals::ProjectInitModal;
@@ -83,17 +83,16 @@ fn ui(f: &mut Frame, app: &App) {
 }
 
 fn render_main_content(f: &mut Frame, area: ratatui::prelude::Rect, app: &App) {
-    // New 3-panel layout: Sessions (30%) | Projects (45%) | Stats (25%)
+    // New 2-panel layout: Sessions sidebar (25%) | Empty main area (75%)
     let content_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage(30), // Sessions
-            Constraint::Percentage(45), // Projects
-            Constraint::Percentage(25), // Stats
+            Constraint::Percentage(25), // Sessions sidebar
+            Constraint::Percentage(75), // Empty main content area
         ])
         .split(area);
 
-    // Render the three main panels
+    // Render sessions sidebar
     SessionsPanel::render(
         f,
         content_chunks[0],
@@ -101,19 +100,41 @@ fn render_main_content(f: &mut Frame, area: ratatui::prelude::Rect, app: &App) {
         app.selected_session_index
     );
 
-    ProjectsPanel::render(
-        f,
-        content_chunks[1],
-        &app.data.projects,
-        app.selected_project_index
-    );
+    // Render empty main content area
+    render_empty_content(f, content_chunks[1]);
+}
 
-    StatsPanel::render(
-        f,
-        content_chunks[2],
-        &app.data.stats,
-        &app.data.sessions
-    );
+fn render_empty_content(f: &mut Frame, area: ratatui::prelude::Rect) {
+    use ratatui::{
+        text::{Line, Span, Text},
+        widgets::{Block, BorderType, Borders, Paragraph},
+        style::{Color, Style, Stylize},
+        layout::Alignment,
+    };
+
+    let empty_block = Block::default()
+        .title("📝 Main Content")
+        .title_style(Style::default().fg(Color::Rgb(100, 150, 200)).bold())
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(Style::default().fg(Color::Rgb(60, 60, 80)))
+        .style(Style::default().bg(Color::Rgb(15, 15, 25)));
+
+    let empty_content = Paragraph::new(Text::from(vec![
+        Line::from(""),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Content area", Style::default().fg(Color::Rgb(150, 150, 150)).italic()),
+        ]),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("This space is reserved for future content.", Style::default().fg(Color::Rgb(120, 120, 120))),
+        ]),
+    ]))
+    .block(empty_block)
+    .alignment(Alignment::Center);
+
+    f.render_widget(empty_content, area);
 }
 
 pub fn run() -> Result<(), Box<dyn Error>> {
