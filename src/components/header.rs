@@ -11,13 +11,11 @@ pub struct Header;
 impl Header {
     pub fn render(f: &mut Frame, area: ratatui::prelude::Rect) {
         let header_block = Block::default()
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded)
-            .border_style(Style::default().fg(Color::Rgb(100, 200, 255)))
+            .borders(Borders::TOP)
+            .border_style(Style::default().fg(Color::Rgb(20, 25, 35)))
             .style(Style::default().bg(Color::Rgb(20, 25, 35)));
 
         let header_content = Paragraph::new(vec![
-            Line::from(""),
             Line::from(vec![
                 Span::raw("  "),
                 Span::styled("⚡ ", Style::default().fg(Color::Yellow).bold()),
@@ -28,13 +26,6 @@ impl Header {
                         .add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(" v0.1.0", Style::default().fg(Color::Rgb(120, 120, 120))),
-            ]),
-            Line::from(vec![
-                Span::raw("  "),
-                Span::styled(
-                    "Multi-Agent Workflow Orchestrator",
-                    Style::default().fg(Color::Rgb(180, 180, 180)).italic(),
-                ),
             ]),
         ])
         .block(header_block)

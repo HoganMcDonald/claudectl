@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
@@ -41,7 +41,7 @@ fn ui(f: &mut Frame, app: &App) {
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([
-            Constraint::Length(5), // Header
+            Constraint::Length(3), // Header
             Constraint::Min(0),    // Main content
             Constraint::Length(3), // Footer
         ])
@@ -75,29 +75,29 @@ fn render_main_content(f: &mut Frame, area: ratatui::prelude::Rect, app: &App) {
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Percentage(30), // Sessions
-            Constraint::Percentage(45), // Projects  
+            Constraint::Percentage(45), // Projects
             Constraint::Percentage(25), // Stats
         ])
         .split(area);
 
     // Render the three main panels
     SessionsPanel::render(
-        f, 
-        content_chunks[0], 
+        f,
+        content_chunks[0],
         &app.data.sessions,
         app.selected_session_index
     );
 
     ProjectsPanel::render(
-        f, 
-        content_chunks[1], 
+        f,
+        content_chunks[1],
         &app.data.projects,
         app.selected_project_index
     );
 
     StatsPanel::render(
-        f, 
-        content_chunks[2], 
+        f,
+        content_chunks[2],
         &app.data.stats,
         &app.data.sessions
     );
