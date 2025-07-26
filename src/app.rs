@@ -10,6 +10,7 @@ pub enum AppMode {
     HelpModal,
     FilePickerModal,
     ConfirmationModal(String),
+    ProjectInitModal,
 }
 
 #[derive(Debug, Clone)]
@@ -152,6 +153,10 @@ pub enum AppEvent {
     // Session events
     NewSession,
     StopSession,
+    // Project initialization events
+    ProjectInitChar(char),
+    ProjectInitBackspace,
+    ProjectInitSubmit,
 }
 
 pub struct App {
@@ -165,22 +170,37 @@ pub struct App {
     pub selected_session_index: Option<usize>,
     pub file_picker_state: Option<FilePickerState>,
     pub error_message: Option<String>,
+    
+    // Project initialization state
+    pub project_init_name: String,
+    pub project_init_cursor_visible: bool,
 }
 
 impl App {
     pub fn new() -> Result<Self, AppError> {
         let storage = Box::new(JsonStorage::new()?);
         let data = storage.load()?;
+        
+        // Check if we need to show project initialization modal
+        let current_dir = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+        let needs_init = !crate::project_init::ProjectInitializer::has_claudectl_dir(&current_dir);
+        let default_name = if needs_init {
+            crate::project_init::ProjectInitializer::get_default_project_name(&current_dir)
+        } else {
+            String::new()
+        };
 
         Ok(Self {
             should_quit: false,
-            mode: AppMode::Normal,
+            mode: if needs_init { AppMode::ProjectInitModal } else { AppMode::Normal },
             data,
             storage,
             selected_project_index: None,
             selected_session_index: None,
             file_picker_state: None,
             error_message: None,
+            project_init_name: default_name,
+            project_init_cursor_visible: true,
         })
     }
 
@@ -196,6 +216,8 @@ impl App {
             selected_session_index: None,
             file_picker_state: None,
             error_message: None,
+            project_init_name: String::new(),
+            project_init_cursor_visible: true,
         })
     }
 
@@ -241,6 +263,13 @@ impl App {
             AppMode::ConfirmationModal(_) => match key {
                 KeyCode::Char('y') | KeyCode::Enter => Some(AppEvent::Select),
                 KeyCode::Char('n') | KeyCode::Esc => Some(AppEvent::Cancel),
+                _ => None,
+            },
+            AppMode::ProjectInitModal => match key {
+                KeyCode::Esc => Some(AppEvent::Quit),
+                KeyCode::Enter => Some(AppEvent::ProjectInitSubmit),
+                KeyCode::Backspace => Some(AppEvent::ProjectInitBackspace),
+                KeyCode::Char(c) => Some(AppEvent::ProjectInitChar(c)),
                 _ => None,
             },
         }
@@ -297,6 +326,15 @@ impl App {
             }
             AppEvent::StopSession => {
                 self.handle_stop_session()?;
+            }
+            AppEvent::ProjectInitChar(c) => {
+                self.project_init_name.push(c);
+            }
+            AppEvent::ProjectInitBackspace => {
+                self.project_init_name.pop();
+            }
+            AppEvent::ProjectInitSubmit => {
+                self.handle_project_init_submit()?;
             }
             _ => {
                 // Handle other events as needed
@@ -438,6 +476,28 @@ impl App {
         } else if !self.data.projects.is_empty() {
             self.selected_project_index = Some(0);
         }
+    }
+
+    fn handle_project_init_submit(&mut self) -> Result<(), AppError> {
+        let current_dir = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+        
+        match crate::project_init::ProjectInitializer::initialize_project(
+            &current_dir,
+            self.project_init_name.trim().to_string(),
+        ) {
+            Ok(()) => {
+                // Successfully initialized, switch to normal mode
+                self.mode = AppMode::Normal;
+                self.project_init_name.clear();
+            }
+            Err(e) => {
+                // Handle initialization error
+                self.error_message = Some(format!("Failed to initialize project: {}", e));
+                // For now, still quit on error, but could show error modal instead
+                self.should_quit = true;
+            }
+        }
+        Ok(())
     }
 
     pub fn cleanup_missing_projects(&mut self) -> Result<Vec<String>, AppError> {
