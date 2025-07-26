@@ -59,7 +59,8 @@ fn ui(f: &mut Frame, app: &App) {
                 .split(f.size());
 
             // Render components
-            Header::render(f, main_chunks[0]);
+            let project_name = app.get_current_project_name();
+            Header::render(f, main_chunks[0], &project_name);
             render_main_content(f, main_chunks[1], app);
             Footer::render(f, main_chunks[2]);
 

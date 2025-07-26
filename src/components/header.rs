@@ -9,7 +9,7 @@ use ratatui::{
 pub struct Header;
 
 impl Header {
-    pub fn render(f: &mut Frame, area: ratatui::prelude::Rect) {
+    pub fn render(f: &mut Frame, area: ratatui::prelude::Rect, project_name: &str) {
         let header_block = Block::default()
             .borders(Borders::TOP)
             .border_style(Style::default().fg(Color::Rgb(20, 25, 35)))
@@ -20,12 +20,11 @@ impl Header {
                 Span::raw("  "),
                 Span::styled("⚡ ", Style::default().fg(Color::Yellow).bold()),
                 Span::styled(
-                    "claudectl",
+                    project_name,
                     Style::default()
                         .fg(Color::Rgb(100, 200, 255))
                         .add_modifier(Modifier::BOLD),
                 ),
-                Span::styled(" v0.1.0", Style::default().fg(Color::Rgb(120, 120, 120))),
             ]),
         ])
         .block(header_block)

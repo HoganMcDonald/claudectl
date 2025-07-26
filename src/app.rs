@@ -507,6 +507,18 @@ impl App {
         }
         Ok(removed_ids)
     }
+
+    pub fn get_current_project_name(&self) -> String {
+        let current_dir = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+        
+        // Try to load project config from .claudectl directory
+        if let Ok(config) = crate::project_init::ProjectInitializer::load_project_config(&current_dir) {
+            config.name
+        } else {
+            // Fallback to directory name or "claudectl" if no project config exists
+            crate::project_init::ProjectInitializer::get_default_project_name(&current_dir)
+        }
+    }
 }
 
 #[cfg(test)]

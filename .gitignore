@@ -15,6 +15,7 @@
 
 # Claude directory
 .claude/
+.claudectl/
 
 # OS generated files
 .DS_Store

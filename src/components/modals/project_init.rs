@@ -11,13 +11,13 @@ pub struct ProjectInitModal;
 impl ProjectInitModal {
     pub fn render(f: &mut Frame, project_name: &str, cursor_visible: bool) {
         let area = f.size();
-        
+
         // Create centered modal area
         let modal_width = 60;
         let modal_height = 12;
         let x = (area.width.saturating_sub(modal_width)) / 2;
         let y = (area.height.saturating_sub(modal_height)) / 2;
-        
+
         let modal_area = ratatui::layout::Rect {
             x,
             y,
@@ -30,7 +30,6 @@ impl ProjectInitModal {
 
         // Main modal block
         let block = Block::default()
-            .borders(Borders::ALL)
             .title(" Project Setup ")
             .title_alignment(Alignment::Center)
             .style(Style::default().bg(Color::DarkGray).fg(Color::White));
@@ -69,14 +68,13 @@ impl ProjectInitModal {
 
         // Input field with cursor
         let mut input_spans = vec![Span::styled(project_name, Style::default().fg(Color::White))];
-        
+
         if cursor_visible {
             input_spans.push(Span::styled("█", Style::default().fg(Color::White)));
         }
 
         let input_text = Text::from(Line::from(input_spans));
         let input_block = Block::default()
-            .borders(Borders::ALL)
             .style(Style::default().bg(Color::Black));
         let input = Paragraph::new(input_text)
             .block(input_block)
