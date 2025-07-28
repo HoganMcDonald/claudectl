@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Project {
     pub id: String,
     pub name: String,
@@ -32,14 +32,14 @@ impl Project {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SessionStatus {
     Active,
     Stopped,
     Error,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Session {
     pub id: String,
     pub project_id: Option<String>,
@@ -57,16 +57,16 @@ impl Session {
         }
     }
 
-    pub fn stop(&mut self) {
+    pub const fn stop(&mut self) {
         self.status = SessionStatus::Stopped;
     }
 
-    pub fn set_error(&mut self) {
+    pub const fn set_error(&mut self) {
         self.status = SessionStatus::Error;
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AppStats {
     pub total_projects: usize,
     pub active_sessions: usize,
@@ -74,7 +74,7 @@ pub struct AppStats {
 }
 
 impl AppStats {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             total_projects: 0,
             active_sessions: 0,
@@ -82,16 +82,93 @@ impl AppStats {
         }
     }
 
-    pub fn get_total_runtime(&self) -> Duration {
+    pub const fn get_total_runtime(&self) -> Duration {
         Duration::from_secs(self.total_runtime)
     }
 
-    pub fn set_total_runtime(&mut self, duration: Duration) {
+    pub const fn set_total_runtime(&mut self, duration: Duration) {
         self.total_runtime = duration.as_secs();
     }
 }
 
 impl Default for AppStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SessionData {
+    pub sessions: Vec<Session>,
+    pub stats: SessionStats,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SessionStats {
+    pub active_sessions: usize,
+    pub total_runtime: u64, // Duration in seconds for serialization
+}
+
+impl SessionStats {
+    pub const fn new() -> Self {
+        Self {
+            active_sessions: 0,
+            total_runtime: 0,
+        }
+    }
+
+    pub const fn get_total_runtime(&self) -> Duration {
+        Duration::from_secs(self.total_runtime)
+    }
+
+    pub const fn set_total_runtime(&mut self, duration: Duration) {
+        self.total_runtime = duration.as_secs();
+    }
+}
+
+impl Default for SessionStats {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl SessionData {
+    pub const fn new() -> Self {
+        Self {
+            sessions: Vec::new(),
+            stats: SessionStats::new(),
+        }
+    }
+
+    pub fn add_session(&mut self, session: Session) {
+        self.sessions.push(session);
+        self.update_stats();
+    }
+
+    pub fn get_session_mut(&mut self, session_id: &str) -> Option<&mut Session> {
+        self.sessions.iter_mut().find(|s| s.id == session_id)
+    }
+
+    pub fn remove_session(&mut self, session_id: &str) -> Option<Session> {
+        if let Some(pos) = self.sessions.iter().position(|s| s.id == session_id) {
+            let removed = self.sessions.remove(pos);
+            self.update_stats();
+            Some(removed)
+        } else {
+            None
+        }
+    }
+
+    pub fn update_stats(&mut self) {
+        self.stats.active_sessions = self
+            .sessions
+            .iter()
+            .filter(|s| matches!(s.status, SessionStatus::Active))
+            .count();
+    }
+}
+
+impl Default for SessionData {
     fn default() -> Self {
         Self::new()
     }
@@ -105,7 +182,7 @@ pub struct AppData {
 }
 
 impl AppData {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             projects: Vec::new(),
             sessions: Vec::new(),
