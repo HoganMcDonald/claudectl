@@ -3,7 +3,7 @@ use ratatui::{
     layout::Alignment,
     style::{Color, Modifier, Style, Stylize},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph},
 };
 
 pub struct Header;
