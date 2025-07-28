@@ -11,6 +11,7 @@ pub enum AppMode {
     FilePickerModal,
     ConfirmationModal(String),
     ProjectInitModal,
+    MetricsModal,
 }
 
 #[derive(Debug, Clone)]
@@ -138,6 +139,7 @@ pub enum AppError {
 pub enum AppEvent {
     Quit,
     ToggleHelp,
+    ToggleMetrics,
     AddProject,
     RemoveProject,
     NavigateUp,
@@ -239,6 +241,7 @@ impl App {
             AppMode::Normal => match key {
                 KeyCode::Char('q') | KeyCode::Esc => Some(AppEvent::Quit),
                 KeyCode::Char('?') => Some(AppEvent::ToggleHelp),
+                KeyCode::Char('m') => Some(AppEvent::ToggleMetrics),
                 KeyCode::Char('p') => Some(AppEvent::AddProject),
                 KeyCode::Char('d') => Some(AppEvent::RemoveProject),
                 KeyCode::Char('n') => Some(AppEvent::NewSession),
@@ -250,6 +253,10 @@ impl App {
             },
             AppMode::HelpModal => match key {
                 KeyCode::Char('?') | KeyCode::Esc => Some(AppEvent::ToggleHelp),
+                _ => None,
+            },
+            AppMode::MetricsModal => match key {
+                KeyCode::Char('m') | KeyCode::Esc => Some(AppEvent::ToggleMetrics),
                 _ => None,
             },
             AppMode::FilePickerModal => match key {
@@ -284,6 +291,12 @@ impl App {
                 self.mode = match self.mode {
                     AppMode::HelpModal => AppMode::Normal,
                     _ => AppMode::HelpModal,
+                };
+            }
+            AppEvent::ToggleMetrics => {
+                self.mode = match self.mode {
+                    AppMode::MetricsModal => AppMode::Normal,
+                    _ => AppMode::MetricsModal,
                 };
             }
             AppEvent::AddProject => {
@@ -557,6 +570,10 @@ mod tests {
             Some(AppEvent::ToggleHelp)
         );
         assert_eq!(
+            app.map_key_to_event(KeyCode::Char('m')),
+            Some(AppEvent::ToggleMetrics)
+        );
+        assert_eq!(
             app.map_key_to_event(KeyCode::Char('p')),
             Some(AppEvent::AddProject)
         );
@@ -575,6 +592,27 @@ mod tests {
         assert_eq!(app.mode, AppMode::HelpModal);
 
         app.handle_key_event(KeyCode::Char('?')).unwrap();
+        assert_eq!(app.mode, AppMode::Normal);
+    }
+
+    #[test]
+    fn test_metrics_modal_toggle() {
+        let (mut app, _temp_dir) = create_test_app();
+
+        // Test opening metrics modal
+        app.handle_key_event(KeyCode::Char('m')).unwrap();
+        assert_eq!(app.mode, AppMode::MetricsModal);
+
+        // Test closing metrics modal with 'm'
+        app.handle_key_event(KeyCode::Char('m')).unwrap();
+        assert_eq!(app.mode, AppMode::Normal);
+
+        // Test opening again
+        app.handle_key_event(KeyCode::Char('m')).unwrap();
+        assert_eq!(app.mode, AppMode::MetricsModal);
+
+        // Test closing metrics modal with Esc
+        app.handle_key_event(KeyCode::Esc).unwrap();
         assert_eq!(app.mode, AppMode::Normal);
     }
 

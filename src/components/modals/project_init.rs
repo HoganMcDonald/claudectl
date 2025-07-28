@@ -1,55 +1,31 @@
 use ratatui::{
     Frame,
-    layout::{Alignment, Constraint, Direction, Layout, Margin},
+    layout::{Alignment, Constraint},
     style::{Color, Style},
     text::{Line, Span, Text},
-    widgets::{Block, Borders, Clear, Paragraph, Wrap},
+    widgets::{Block, Paragraph, Wrap},
 };
+use super::SharedModal;
 
 pub struct ProjectInitModal;
 
 impl ProjectInitModal {
     pub fn render(f: &mut Frame, project_name: &str, cursor_visible: bool) {
-        let area = f.size();
+        // Use shared modal styling
+        let modal_area = SharedModal::create_modal_area(f, 60, 12, "Project Setup");
+        let inner = SharedModal::create_inner_area(modal_area);
 
-        // Create centered modal area
-        let modal_width = 60;
-        let modal_height = 12;
-        let x = (area.width.saturating_sub(modal_width)) / 2;
-        let y = (area.height.saturating_sub(modal_height)) / 2;
-
-        let modal_area = ratatui::layout::Rect {
-            x,
-            y,
-            width: modal_width,
-            height: modal_height,
-        };
-
-        // Clear the background
-        f.render_widget(Clear, modal_area);
-
-        // Main modal block
-        let block = Block::default()
-            .title(" Project Setup ")
-            .title_alignment(Alignment::Center)
-            .style(Style::default().bg(Color::DarkGray).fg(Color::White));
-
-        f.render_widget(block, modal_area);
-
-        // Inner content area
-        let inner = modal_area.inner(&Margin { vertical: 1, horizontal: 2 });
-
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
+        let chunks = SharedModal::create_layout(
+            inner,
+            vec![
                 Constraint::Length(2), // Welcome text
                 Constraint::Length(1), // Spacer
                 Constraint::Length(1), // Project label
                 Constraint::Length(1), // Input field
                 Constraint::Length(1), // Spacer
                 Constraint::Length(2), // Instructions
-            ])
-            .split(inner);
+            ],
+        );
 
         // Welcome text
         let welcome_text = Text::from(vec![

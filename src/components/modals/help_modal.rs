@@ -57,6 +57,11 @@ impl HelpModal {
                 Span::styled("?", Style::default().fg(Color::Green).bold()),
                 Span::raw("            Toggle this help menu"),
             ]),
+            Line::from(vec![
+                Span::raw("    "),
+                Span::styled("m", Style::default().fg(Color::Green).bold()),
+                Span::raw("            Toggle metrics modal"),
+            ]),
             Line::from(""),
             Line::from(vec![
                 Span::styled("  Projects:", Style::default().fg(Color::Blue).bold()),

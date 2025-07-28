@@ -14,6 +14,7 @@ use crate::components::{
     Footer, Header, SessionsPanel,
     HelpModal, FilePickerModal, ConfirmationModal,
 };
+use crate::components::modals::MetricsModal;
 use crate::components::modals::ProjectInitModal;
 use std::{error::Error, io};
 
@@ -68,6 +69,9 @@ fn ui(f: &mut Frame, app: &App) {
             match app.mode {
                 AppMode::HelpModal => {
                     HelpModal::render(f);
+                }
+                AppMode::MetricsModal => {
+                    MetricsModal::render(f, f.size());
                 }
                 AppMode::FilePickerModal => {
                     if let Some(ref picker_state) = app.file_picker_state {
