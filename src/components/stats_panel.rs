@@ -111,11 +111,11 @@ impl StatsPanel {
         let seconds = total_seconds % 60;
 
         if hours > 0 {
-            format!("{}h {}m", hours, minutes)
+            format!("{hours}h {minutes}m")
         } else if minutes > 0 {
-            format!("{}m {}s", minutes, seconds)
+            format!("{minutes}m {seconds}s")
         } else {
-            format!("{}s", seconds)
+            format!("{seconds}s")
         }
     }
 }
