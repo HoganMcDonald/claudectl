@@ -2,7 +2,7 @@ use crate::data::{Session, SessionStatus};
 use ratatui::{
     style::{Color, Style, Stylize},
     text::{Line, Span, Text},
-    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
+    widgets::{Block, List, ListItem, Paragraph},
     Frame,
 };
 
@@ -14,33 +14,10 @@ impl SessionsPanel {
         area: ratatui::prelude::Rect, 
         sessions: &[Session],
         selected_index: Option<usize>,
-        is_focused: bool
+        _is_focused: bool
     ) {
-        let title = if is_focused {
-            "🔄 Sessions [FOCUSED]"
-        } else {
-            "🔄 Sessions"
-        };
-
-        let title_color = if is_focused {
-            Color::Rgb(150, 255, 150)
-        } else {
-            Color::Rgb(100, 200, 100)
-        };
-
-        let border_color = if is_focused {
-            Color::Rgb(120, 220, 120)
-        } else {
-            Color::Rgb(80, 160, 80)
-        };
-
         let sessions_block = Block::default()
-            .title(title)
-            .title_style(Style::default().fg(title_color).bold())
-            .borders(Borders::ALL)
-            .border_type(BorderType::Rounded)
-            .border_style(Style::default().fg(border_color))
-            .style(Style::default().bg(Color::Rgb(15, 25, 15)));
+            .style(Style::default().bg(Color::Rgb(5, 5, 5))); // Darkest color, no border or title
 
         if sessions.is_empty() {
             let empty_content = Paragraph::new(Text::from(vec![

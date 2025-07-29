@@ -1,4 +1,4 @@
-use crate::data::{AppData, SessionData};
+use crate::data::{AppData, Session, SessionData};
 use crate::process::ProcessManager;
 use crate::storage::{JsonStorage, SessionStorage, Storage, StorageError};
 use crossterm::event::KeyCode;
@@ -165,6 +165,7 @@ pub enum AppEvent {
     // Session events
     NewSession,
     StopSession,
+    DeleteSession,
     SelectSession,
     // Focus events
     SwitchFocus,
@@ -203,7 +204,7 @@ impl App {
         let mut data = storage.load()?;
         
         // Use project-specific storage for sessions
-        let session_storage = Box::new(JsonStorage::new()?);
+        let session_storage = Box::new(JsonStorage::new_for_sessions()?);
         let session_data = session_storage.load_sessions()?;
         
         // Remove sessions from AppData since they're now stored separately
@@ -244,7 +245,7 @@ impl App {
         let mut data = storage.load()?;
         
         // Use project-specific storage for sessions
-        let session_storage = Box::new(JsonStorage::new()?);
+        let session_storage = Box::new(JsonStorage::new_for_sessions()?);
         let session_data = session_storage.load_sessions()?;
         
         // Remove sessions from AppData since they're now stored separately
@@ -306,6 +307,7 @@ impl App {
                 KeyCode::Char('d') => Some(AppEvent::RemoveProject),
                 KeyCode::Char('n') => Some(AppEvent::NewSession),
                 KeyCode::Char('s') => Some(AppEvent::StopSession),
+                KeyCode::Char('x') => Some(AppEvent::DeleteSession),
                 KeyCode::Up | KeyCode::Char('k') => Some(AppEvent::NavigateUp),
                 KeyCode::Down | KeyCode::Char('j') => Some(AppEvent::NavigateDown),
                 KeyCode::Enter => Some(AppEvent::Select),
@@ -400,6 +402,9 @@ impl App {
             }
             AppEvent::StopSession => {
                 self.handle_stop_session()?;
+            }
+            AppEvent::DeleteSession => {
+                self.handle_delete_session()?;
             }
             AppEvent::SelectSession => {
                 self.handle_select_session()?;
@@ -565,6 +570,38 @@ impl App {
                         eprintln!("Failed to stop Claude Code session: {e}");
                     }
                 });
+            }
+        }
+        Ok(())
+    }
+
+    fn handle_delete_session(&mut self) -> Result<(), AppError> {
+        if let Some(index) = self.selected_session_index {
+            if let Some(session) = self.session_data.sessions.get(index) {
+                let session_id = session.id.clone();
+                
+                // Remove the session from data
+                if let Some(_removed_session) = self.session_data.remove_session(&session_id) {
+                    // Clear selected session output if this was the selected one
+                    self.selected_session_output = None;
+                    
+                    // Adjust selected index if needed
+                    if self.session_data.sessions.is_empty() {
+                        self.selected_session_index = None;
+                    } else if index >= self.session_data.sessions.len() {
+                        self.selected_session_index = Some(self.session_data.sessions.len() - 1);
+                    }
+                    
+                    self.save_session_data()?;
+
+                    // Stop the Claude Code process
+                    let process_manager = Arc::clone(&self.process_manager);
+                    tokio::spawn(async move {
+                        if let Err(e) = process_manager.stop_session(&session_id).await {
+                            eprintln!("Failed to stop Claude Code session: {e}");
+                        }
+                    });
+                }
             }
         }
         Ok(())
@@ -941,6 +978,27 @@ mod tests {
             app.session_data.sessions[0].status,
             crate::data::SessionStatus::Stopped
         );
+    }
+
+    #[tokio::test]
+    async fn test_delete_session() {
+        let (mut app, _temp_dir) = create_test_app();
+        
+        // Clear any existing sessions and add our test session
+        app.session_data.sessions.clear();
+        let session = Session::new(None);
+        app.session_data.add_session(session);
+        app.selected_session_index = Some(0);
+        
+        assert_eq!(app.session_data.sessions.len(), 1);
+        
+        // Delete the session
+        app.handle_delete_session().unwrap();
+        
+        // Verify session was deleted
+        assert_eq!(app.session_data.sessions.len(), 0);
+        assert_eq!(app.selected_session_index, None);
+        assert_eq!(app.selected_session_output, None);
     }
 
     #[test]

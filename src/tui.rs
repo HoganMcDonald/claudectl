@@ -133,24 +133,13 @@ fn render_main_content(f: &mut Frame, area: ratatui::prelude::Rect, app: &App) {
 fn render_main_content_area(f: &mut Frame, area: ratatui::prelude::Rect, app: &App) {
     use ratatui::{
         text::{Line, Span, Text},
-        widgets::{Block, BorderType, Borders, Paragraph, Wrap},
+        widgets::{Block, Padding, Paragraph, Wrap},
         style::{Color, Style, Stylize},
         layout::Alignment,
     };
 
-    let title = if app.selected_session_output.is_some() {
-        "📝 Session Output"
-    } else {
-        "📝 Main Content"
-    };
-
     let content_block = Block::default()
-        .title(title)
-        .title_style(Style::default().fg(Color::Rgb(100, 150, 200)).bold())
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(Color::Rgb(60, 60, 80)))
-        .style(Style::default().bg(Color::Rgb(15, 15, 25)));
+        .padding(Padding::left(2)); // Transparent with no border or title, left padding
 
     let content = if let Some(ref output) = app.selected_session_output {
         // Show session output
@@ -179,6 +168,11 @@ fn render_main_content_area(f: &mut Frame, area: ratatui::prelude::Rect, app: &A
                 Span::raw("Press "),
                 Span::styled("Enter", Style::default().fg(Color::Green).bold()),
                 Span::raw(" to view session output"),
+            ]),
+            Line::from(vec![
+                Span::raw("Press "),
+                Span::styled("x", Style::default().fg(Color::Red).bold()),
+                Span::raw(" to delete selected session"),
             ]),
             Line::from(""),
             Line::from(vec![
