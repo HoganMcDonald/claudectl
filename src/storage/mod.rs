@@ -37,18 +37,31 @@ pub struct JsonStorage {
 
 impl JsonStorage {
     pub fn new() -> Result<Self, StorageError> {
+        // For global app data (projects), always use global config with data.json
+        let config_path = Self::get_global_config_directory()?;
+        let data_file = config_path.join("data.json");
+
+        Ok(Self {
+            config_path,
+            data_file,
+        })
+    }
+
+    pub fn new_for_sessions() -> Result<Self, StorageError> {
         // Use project-specific .claudectl directory if it exists
         let current_dir = std::env::current_dir().map_err(StorageError::Io)?;
         let project_config_path = current_dir.join(".claudectl");
         
-        let config_path = if project_config_path.exists() {
-            project_config_path
+        let (config_path, data_file) = if project_config_path.exists() {
+            let config = project_config_path;
+            let file = config.join("sessions.json");
+            (config, file)
         } else {
             // Fall back to global config directory if no project is initialized
-            Self::get_global_config_directory()?
+            let config = Self::get_global_config_directory()?;
+            let file = config.join("data.json");
+            (config, file)
         };
-        
-        let data_file = config_path.join("sessions.json");
 
         Ok(Self {
             config_path,
@@ -156,6 +169,14 @@ impl Storage for JsonStorage {
         }
 
         let mut data: AppData = serde_json::from_str(&contents)?;
+
+        // Clear sessions since they're now stored separately
+        if !data.sessions.is_empty() {
+            data.sessions.clear();
+            data.stats.active_sessions = 0;
+            // Save the updated data to remove sessions from global storage
+            self.save(&data)?;
+        }
 
         // Validate data integrity
         self.validate_data_integrity(&data)?;
