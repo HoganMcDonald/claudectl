@@ -1,3 +1,4 @@
+use crate::error::{ClaudeCtlError, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -24,22 +25,18 @@ impl WorkspaceConfig {
         }
     }
 
-    pub fn save(&self, workspace_dir: &str) -> Result<(), String> {
-        let config_content = serde_json::to_string_pretty(&self)
-            .map_err(|e| format!("Failed to serialize config: {}", e))?;
-        
-        let config_path = format!("{}/config.json", workspace_dir);
-        fs::write(&config_path, config_content)
-            .map_err(|e| format!("Error creating workspace config: {}", e))?;
-        
+    pub fn save(&self, workspace_dir: &str) -> Result<()> {
+        let config_content = serde_json::to_string_pretty(&self)?;
+        let config_path = format!("{workspace_dir}/config.json");
+        fs::write(&config_path, config_content)?;
         Ok(())
     }
 
-    pub fn load(config_path: &Path) -> Result<Self, String> {
+    pub fn load(config_path: &Path) -> Result<Self> {
         let config_content = fs::read_to_string(config_path)
-            .map_err(|e| format!("Failed to read config: {}", e))?;
+            .map_err(|e| ClaudeCtlError::Config(format!("Failed to read config at {}: {e}", config_path.display())))?;
         
         serde_json::from_str(&config_content)
-            .map_err(|e| format!("Failed to parse config: {}", e))
+            .map_err(|e| ClaudeCtlError::Config(format!("Failed to parse config at {}: {e}", config_path.display())).into())
     }
 }

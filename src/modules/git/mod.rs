@@ -1,8 +1,9 @@
+use crate::error::{ClaudeCtlError, Result};
 use std::process::Command;
 
 pub fn get_repository_name() -> String {
     let output = Command::new("git")
-        .args(&["remote", "get-url", "origin"])
+        .args(["remote", "get-url", "origin"])
         .output();
     
     match output {
@@ -21,29 +22,55 @@ pub fn get_repository_name() -> String {
     }
 }
 
-pub fn get_current_branch() -> Result<String, String> {
+pub fn validate_git_repository() -> Result<()> {
     let output = Command::new("git")
-        .args(&["rev-parse", "--abbrev-ref", "HEAD"])
+        .args(["rev-parse", "--is-inside-work-tree"])
         .output()
-        .map_err(|e| format!("Failed to execute git rev-parse: {}", e))?;
+        .map_err(|e| ClaudeCtlError::Git(format!("Failed to check git repository: {e}")))?;
+    
+    if !output.status.success() {
+        return Err(ClaudeCtlError::Git("Not inside a git repository".to_string()));
+    }
+    Ok(())
+}
+
+pub fn get_current_branch() -> Result<String> {
+    validate_git_repository()?;
+    
+    // Check for detached HEAD first
+    let output = Command::new("git")
+        .args(["symbolic-ref", "-q", "HEAD"])
+        .output()
+        .map_err(|e| ClaudeCtlError::Git(format!("Failed to get branch: {e}")))?;
+        
+    if !output.status.success() {
+        return Err(ClaudeCtlError::Git("In detached HEAD state. Please checkout a branch first.".to_string()));
+    }
+    
+    let output = Command::new("git")
+        .args(["rev-parse", "--abbrev-ref", "HEAD"])
+        .output()
+        .map_err(|e| ClaudeCtlError::Git(format!("Failed to execute git rev-parse: {e}")))?;
     
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
     } else {
-        Err(format!("Error getting current branch: {}", String::from_utf8_lossy(&output.stderr)))
+        Err(ClaudeCtlError::Git(format!("Error getting current branch: {}", String::from_utf8_lossy(&output.stderr))))
     }
 }
 
-pub fn create_worktree(worktree_path: &str, branch_name: &str, base_branch: &str) -> Result<(), String> {
+pub fn create_worktree(worktree_path: &str, branch_name: &str, base_branch: &str) -> Result<()> {
+    validate_git_repository()?;
+    
     let output = Command::new("git")
-        .args(&["worktree", "add", "-b", branch_name, worktree_path, base_branch])
+        .args(["worktree", "add", "-b", branch_name, worktree_path, base_branch])
         .output()
-        .map_err(|e| format!("Failed to execute git worktree add: {}", e))?;
+        .map_err(|e| ClaudeCtlError::Git(format!("Failed to execute git worktree add: {e}")))?;
     
     if output.status.success() {
         Ok(())
     } else {
-        Err(format!("Error creating git worktree: {}", String::from_utf8_lossy(&output.stderr)))
+        Err(ClaudeCtlError::Git(format!("Error creating git worktree: {}", String::from_utf8_lossy(&output.stderr))))
     }
 }
 
@@ -53,12 +80,12 @@ fn extract_repo_name_from_url(url: &str) -> String {
     if url.contains("github.com") || url.contains("gitlab.com") || url.contains("bitbucket.org") {
         // SSH format: git@github.com:user/repo
         // HTTPS format: https://github.com/user/repo
-        url.split('/').last()
-            .or_else(|| url.split(':').last()?.split('/').last())
+        url.split('/').next_back()
+            .or_else(|| url.split(':').next_back()?.split('/').next_back())
             .unwrap_or("unknown")
             .to_string()
     } else {
         // For other URLs, just take the last path component
-        url.split('/').last().unwrap_or("unknown").to_string()
+        url.split('/').next_back().unwrap_or("unknown").to_string()
     }
 }
