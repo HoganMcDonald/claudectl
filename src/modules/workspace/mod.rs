@@ -147,3 +147,78 @@ pub fn list() -> Result<()> {
     
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+    use std::fs;
+
+    #[test]
+    fn test_validate_workspace_name_valid() {
+        assert!(validate_workspace_name("valid-name").is_ok());
+        assert!(validate_workspace_name("ValidName123").is_ok());
+        assert!(validate_workspace_name("My Project").is_ok());
+    }
+
+    #[test]
+    fn test_validate_workspace_name_empty() {
+        let result = validate_workspace_name("");
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), ClaudeCtlError::Validation(_)));
+    }
+
+    #[test]
+    fn test_validate_workspace_name_too_long() {
+        let long_name = "a".repeat(101);
+        let result = validate_workspace_name(&long_name);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), ClaudeCtlError::Validation(_)));
+    }
+
+    #[test]
+    fn test_validate_workspace_name_path_separators() {
+        assert!(validate_workspace_name("name/with/slash").is_err());
+        assert!(validate_workspace_name("name\\with\\backslash").is_err());
+    }
+
+    #[test]
+    fn test_validate_workspace_name_null_character() {
+        let name_with_null = "name\0with\0null";
+        let result = validate_workspace_name(name_with_null);
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), ClaudeCtlError::Validation(_)));
+    }
+
+    #[test]
+    fn test_cleanup_guard_success() {
+        let temp_dir = TempDir::new().unwrap();
+        let test_dir = temp_dir.path().join("test");
+        fs::create_dir_all(&test_dir).unwrap();
+        
+        {
+            let mut guard = CleanupGuard::new();
+            guard.add_path(test_dir.to_string_lossy().to_string());
+            guard.success(); // Should prevent cleanup
+        }
+        
+        // Directory should still exist
+        assert!(test_dir.exists());
+    }
+
+    #[test]
+    fn test_cleanup_guard_failure() {
+        let temp_dir = TempDir::new().unwrap();
+        let test_dir = temp_dir.path().join("test");
+        fs::create_dir_all(&test_dir).unwrap();
+        
+        {
+            let mut guard = CleanupGuard::new();
+            guard.add_path(test_dir.to_string_lossy().to_string());
+            // Don't call success() - should trigger cleanup
+        }
+        
+        // Directory should be cleaned up
+        assert!(!test_dir.exists());
+    }
+}

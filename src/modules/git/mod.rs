@@ -89,3 +89,56 @@ fn extract_repo_name_from_url(url: &str) -> String {
         url.split('/').next_back().unwrap_or("unknown").to_string()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_repo_name_from_github_https() {
+        let url = "https://github.com/user/repo.git";
+        assert_eq!(extract_repo_name_from_url(url), "repo");
+    }
+
+    #[test]
+    fn test_extract_repo_name_from_github_https_no_git() {
+        let url = "https://github.com/user/repo";
+        assert_eq!(extract_repo_name_from_url(url), "repo");
+    }
+
+    #[test]
+    fn test_extract_repo_name_from_github_ssh() {
+        let url = "git@github.com:user/repo.git";
+        assert_eq!(extract_repo_name_from_url(url), "repo");
+    }
+
+    #[test]
+    fn test_extract_repo_name_from_gitlab() {
+        let url = "https://gitlab.com/user/project.git";
+        assert_eq!(extract_repo_name_from_url(url), "project");
+    }
+
+    #[test]
+    fn test_extract_repo_name_from_bitbucket() {
+        let url = "https://bitbucket.org/user/repo.git";
+        assert_eq!(extract_repo_name_from_url(url), "repo");
+    }
+
+    #[test]
+    fn test_extract_repo_name_from_custom_url() {
+        let url = "https://git.example.com/user/custom-repo";
+        assert_eq!(extract_repo_name_from_url(url), "custom-repo");
+    }
+
+    #[test]
+    fn test_extract_repo_name_from_invalid_url() {
+        let url = "not-a-url";
+        assert_eq!(extract_repo_name_from_url(url), "not-a-url");
+    }
+
+    #[test]
+    fn test_extract_repo_name_empty_url() {
+        let url = "";
+        assert_eq!(extract_repo_name_from_url(url), "");
+    }
+}
