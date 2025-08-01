@@ -5,6 +5,10 @@ use std::fs;
 use std::path::Path;
 use uuid::Uuid;
 
+/// Configuration for a claudectl workspace
+/// 
+/// Contains metadata about a workspace including its unique ID,
+/// human-readable name, creation timestamp, and associated git worktree path.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WorkspaceConfig {
     pub id: Uuid,
@@ -15,6 +19,12 @@ pub struct WorkspaceConfig {
 }
 
 impl WorkspaceConfig {
+    /// Creates a new workspace configuration
+    /// 
+    /// # Arguments
+    /// * `id` - Unique UUID v7 identifier for the workspace
+    /// * `name` - Human-readable name for the workspace
+    /// * `worktree_path` - Full path to the git worktree directory
     pub fn new(id: Uuid, name: String, worktree_path: String) -> Self {
         Self {
             id,
@@ -25,6 +35,13 @@ impl WorkspaceConfig {
         }
     }
 
+    /// Saves the workspace configuration to a config.json file
+    /// 
+    /// # Arguments
+    /// * `workspace_dir` - Directory where the config.json file should be written
+    /// 
+    /// # Errors
+    /// Returns an error if the file cannot be written or JSON serialization fails
     pub fn save(&self, workspace_dir: &str) -> Result<()> {
         let config_content = serde_json::to_string_pretty(&self)?;
         let config_path = format!("{workspace_dir}/config.json");
@@ -32,6 +49,13 @@ impl WorkspaceConfig {
         Ok(())
     }
 
+    /// Loads a workspace configuration from a config.json file
+    /// 
+    /// # Arguments
+    /// * `config_path` - Path to the config.json file to load
+    /// 
+    /// # Errors
+    /// Returns an error if the file cannot be read or contains invalid JSON
     pub fn load(config_path: &Path) -> Result<Self> {
         let config_content = fs::read_to_string(config_path)
             .map_err(|e| ClaudeCtlError::Config(format!("Failed to read config at {}: {e}", config_path.display())))?;

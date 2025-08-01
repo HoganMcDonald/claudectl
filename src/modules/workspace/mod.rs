@@ -55,6 +55,23 @@ impl Drop for CleanupGuard {
     }
 }
 
+/// Initializes a new workspace with the given name
+/// 
+/// This function creates:
+/// - A local workspace directory at `./.claudectl/workspaces/{uuid}`
+/// - A git worktree at `~/.claudectl/projects/{repo}/{uuid}`
+/// - A new git branch named `claudectl/{uuid}`
+/// 
+/// # Arguments
+/// * `name` - The human-readable name for the workspace
+/// 
+/// # Errors
+/// Returns an error if:
+/// - Workspace name validation fails
+/// - Not in a git repository
+/// - Git worktree creation fails
+/// - Filesystem operations fail
+/// - Configuration cannot be saved
 pub fn initialize(name: &str) -> Result<()> {
     validate_workspace_name(name)?;
     
@@ -105,6 +122,14 @@ pub fn initialize(name: &str) -> Result<()> {
     Ok(())
 }
 
+/// Lists all workspaces in the current repository
+/// 
+/// Scans the `./.claudectl/workspaces` directory for workspace configurations
+/// and displays them sorted by creation time. Shows workspace name, ID, 
+/// creation time, and worktree path for each workspace.
+/// 
+/// # Errors
+/// Returns an error if the workspaces directory cannot be read
 pub fn list() -> Result<()> {
     let workspaces_dir = "./.claudectl/workspaces";
     
