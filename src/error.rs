@@ -20,12 +20,6 @@ pub enum ClaudeCtlError {
     
     #[error("Environment variable error: {0}")]
     Environment(String),
-    
-    #[error("Workspace '{name}' already exists")]
-    WorkspaceExists { name: String },
-    
-    #[error("Workspace '{name}' not found")]
-    WorkspaceNotFound { name: String },
 }
 
 pub type Result<T> = std::result::Result<T, ClaudeCtlError>;

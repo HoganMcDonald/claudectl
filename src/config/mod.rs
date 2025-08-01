@@ -61,7 +61,7 @@ impl WorkspaceConfig {
             .map_err(|e| ClaudeCtlError::Config(format!("Failed to read config at {}: {e}", config_path.display())))?;
         
         serde_json::from_str(&config_content)
-            .map_err(|e| ClaudeCtlError::Config(format!("Failed to parse config at {}: {e}", config_path.display())).into())
+            .map_err(|e| ClaudeCtlError::Config(format!("Failed to parse config at {}: {e}", config_path.display())))
     }
 }
 
