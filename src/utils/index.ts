@@ -1,0 +1,35 @@
+/**
+ * ClaudeCtl utility functions organized by domain.
+ *
+ * This module re-exports all utility functions from their respective domain files
+ * to provide a clean, organized API while maintaining backward compatibility.
+ */
+
+// Git utilities
+export {
+  isGitRepository,
+} from "./git";
+
+// Directory management utilities
+export {
+  getGlobalClaudectlDir,
+  getProjectsDir,
+  getProjectDir,
+  ensureDirectory,
+  hasClaudectlConfig,
+} from "./directories";
+
+// Project configuration utilities
+export {
+  createProjectConfig,
+  loadProjectConfig,
+  updateProjectConfig,
+} from "./config";
+
+// Multi-step initialization utilities
+export {
+  performMultiStepInit,
+  type InitStepResult,
+  type InitStepError,
+  type InitStepOutcome,
+} from "./initialization";
