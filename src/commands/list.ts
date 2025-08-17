@@ -19,6 +19,7 @@ import {
   emphasis,
   dim,
 } from "../output";
+import { ClaudeSessionManager, type ClaudeSessionInfo } from "../claude-session";
 
 /**
  * Formats a commit hash for display (short version).
@@ -34,14 +35,11 @@ function formatCommitHash(commit: string): string {
  * Formats the status column for a task.
  *
  * @param task - The task information.
+ * @param session - The Claude session information (if exists).
  * @returns Formatted status string.
  */
-function formatStatus(task: WorktreeInfo): string {
+function formatStatus(task: WorktreeInfo, session?: ClaudeSessionInfo): string {
   const parts: string[] = [];
-
-  if (task.isMain) {
-    parts.push("main");
-  }
 
   if (task.isCurrent) {
     parts.push("current");
@@ -51,6 +49,10 @@ function formatStatus(task: WorktreeInfo): string {
     parts.push("clean");
   } else if (task.isClean === false) {
     parts.push("dirty");
+  }
+
+  if (session) {
+    parts.push("claude");
   }
 
   return parts.join(", ") || "-";
@@ -94,7 +96,7 @@ function getTaskDisplayName(task: WorktreeInfo, projectName: string): string {
 /**
  * Lists all active tasks for the current claudectl project.
  */
-export const listCommand = (): void => {
+export const listCommand = async (): Promise<void> => {
   const currentDir = process.cwd();
 
   // Check if current directory is a git repository
@@ -125,54 +127,71 @@ export const listCommand = (): void => {
     fatal("failed to load project configuration");
   }
 
-  // Get all tasks for this project
-  let tasks: WorktreeInfo[];
+  // Get all tasks for this project (excluding main repository)
+  let allTasks: WorktreeInfo[];
   try {
-    tasks = getProjectWorktrees(projectConfig.name, currentDir);
+    allTasks = getProjectWorktrees(projectConfig.name, currentDir);
   } catch (err) {
     fatal(`failed to list tasks: ${err instanceof Error ? err.message : String(err)}`);
   }
 
+  // Filter out the main repository - only show created sessions
+  const tasks = allTasks.filter(task => !task.isMain);
+
+  // Clean up dead sessions and get active ones
+  ClaudeSessionManager.cleanupSessions();
+  const sessions = ClaudeSessionManager.listSessions();
+  const sessionMap = new Map<string, ClaudeSessionInfo>();
+  
+  // Map sessions by worktree name
+  for (const session of sessions) {
+    sessionMap.set(session.sessionName, session);
+  }
+
   // Display results
-  section(`Tasks for project "${projectConfig.name}"`);
+  section(`Sessions for project "${projectConfig.name}"`);
   blank();
 
   if (tasks.length === 0) {
-    info("No tasks found for this project");
+    info("No sessions found for this project");
     blank();
-    info("Create a new task with: claudectl new [name]");
+    info("Create a new session with: claudectl new [name]");
     return;
   }
 
   // Prepare table data
   const headers = ["Name", "Branch", "Commit", "Status", "Last Commit"];
-  const rows = tasks.map(task => [
-    getTaskDisplayName(task, projectConfig.name),
-    task.branch || "-",
-    formatCommitHash(task.commit),
-    formatStatus(task),
-    formatCommitMessage(task.commitMessage)
-  ]);
+  const rows = tasks.map(task => {
+    const taskName = getTaskDisplayName(task, projectConfig.name);
+    const session = sessionMap.get(taskName);
+    
+    return [
+      taskName,
+      task.branch || "-",
+      formatCommitHash(task.commit),
+      formatStatus(task, session),
+      formatCommitMessage(task.commitMessage)
+    ];
+  });
 
   // Display table
   table(headers, rows);
 
-  // Show current worktree info
+  // Show current session info (if in a session)
   const currentTask = tasks.find(task => task.isCurrent);
   if (currentTask) {
     blank();
     const currentName = getTaskDisplayName(currentTask, projectConfig.name);
-    success(`Currently in worktree: ${currentName}`);
+    success(`Currently in session: ${currentName}`);
   }
 
   // Show switch instructions
   blank();
-  emphasis("Switch to a worktree:");
+  emphasis("Switch to a session:");
   tasks.forEach(task => {
     if (!task.isCurrent) {
       const displayName = getTaskDisplayName(task, projectConfig.name);
-      const comment = task.isMain ? "main" : displayName;
-      dim(`  cd ${task.path}  # ${comment}`);
+      dim(`  cd ${task.path}  # ${displayName}`);
     }
   });
 };

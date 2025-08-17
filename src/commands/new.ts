@@ -19,6 +19,7 @@ import {
   section,
   fatal,
 } from "../output";
+import { ClaudeSessionManager } from "../claude-session";
 
 /**
  * Generates a friendly worktree name using adjective-animal pattern.
@@ -30,11 +31,11 @@ function generateWorktreeName(): string {
 }
 
 /**
- * Creates a new worktree for the current claudectl project.
+ * Creates a new worktree for the current claudectl project and starts a Claude Code session.
  *
  * @param worktreeName - Optional name for the new worktree. If not provided, generates a unique name.
  */
-export const newCommand = (worktreeName?: string): void => {
+export const newCommand = async (worktreeName?: string): Promise<void> => {
   const currentDir = process.cwd();
 
   // Check if current directory is a git repository
@@ -97,8 +98,28 @@ export const newCommand = (worktreeName?: string): void => {
     fatal(`failed to create worktree: ${errorMessage}`);
   }
 
+  // Start Claude Code session
+  blank();
+  section("Starting Claude Code session");
+  blank();
+
+  try {
+    await ClaudeSessionManager.startSession({
+      workingDirectory: worktreePath,
+      sessionName: resolvedWorktreeName,
+      useContainer: true,
+      dangerouslySkipPermissions: true
+    });
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    error(`Failed to start Claude Code session: ${errorMessage}`);
+    info("You can manually start Claude Code later if needed");
+  }
+
   blank();
   success(`Worktree "${resolvedWorktreeName}" created successfully`);
+  success(`Claude Code session started in background`);
   info(`Switch to the worktree: cd ${worktreePath}`);
   info("The worktree contains a fresh branch based on the latest main/master");
+  info("Claude Code is running with container isolation and dangerously-skip-permissions");
 };

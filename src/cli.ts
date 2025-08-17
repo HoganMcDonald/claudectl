@@ -27,15 +27,15 @@ program
   .command("new")
   .description("Create a new worktree from the latest main/master branch")
   .argument("[name]", "Worktree name (defaults to auto-generated name)")
-  .action((name?: string) => {
-    newCommand(name);
+  .action(async (name?: string) => {
+    await newCommand(name);
   });
 
 program
   .command("list")
   .description("List all active worktrees for the current project")
-  .action(() => {
-    listCommand();
+  .action(async () => {
+    await listCommand();
   });
 
 program
@@ -43,8 +43,8 @@ program
   .description("Remove a session/worktree by name")
   .argument("<name>", "Name of the session to remove")
   .option("-f, --force", "Force removal even if session has uncommitted changes")
-  .action((name: string, options: { force?: boolean }) => {
-    rmCommand(name, options);
+  .action(async (name: string, options: { force?: boolean }) => {
+    await rmCommand(name, options);
   });
 
 // Hidden completion command for tabtab

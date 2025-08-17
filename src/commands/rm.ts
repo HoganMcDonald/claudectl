@@ -18,14 +18,16 @@ import {
   emphasis,
   fatal,
 } from "../output";
+import { ClaudeSessionManager } from "../claude-session";
 
 /**
  * Removes a worktree/session by name from the current claudectl project.
+ * Also stops any associated Claude Code session.
  *
  * @param sessionName - Name of the session/worktree to remove.
  * @param options - Command options including force flag.
  */
-export const rmCommand = (sessionName: string, options: { force?: boolean } = {}): void => {
+export const rmCommand = async (sessionName: string, options: { force?: boolean } = {}): Promise<void> => {
   const currentDir = process.cwd();
 
   // Validate session name is provided
@@ -141,6 +143,17 @@ export const rmCommand = (sessionName: string, options: { force?: boolean } = {}
     blank();
   }
 
+  // Stop Claude Code session if it exists
+  const claudeSession = ClaudeSessionManager.getSession(sessionName);
+  if (claudeSession) {
+    try {
+      info(`Stopping Claude Code session for "${sessionName}"`);
+      await ClaudeSessionManager.stopSession(sessionName);
+    } catch (err) {
+      warning(`Failed to stop Claude Code session: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
   // Remove the worktree
   try {
     const removedWorktree = removeWorktreeByName(sessionName, projectConfig.name, currentDir, options.force || false);
@@ -148,6 +161,9 @@ export const rmCommand = (sessionName: string, options: { force?: boolean } = {}
     success(`Session "${sessionName}" removed successfully`);
     info(`Removed directory: ${displayPath}`);
     info(`Removed branch: ${removedWorktree.branch}`);
+    if (claudeSession) {
+      info(`Stopped Claude Code session`);
+    }
     
   } catch (err) {
     fatal(`failed to remove session: ${err instanceof Error ? err.message : String(err)}`);
