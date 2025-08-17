@@ -188,7 +188,20 @@ export function createWorktree(
 }
 
 /**
- * Lists all git worktrees in the repository.
+ * Information about a git worktree.
+ */
+export interface WorktreeInfo {
+  path: string;
+  branch: string;
+  commit: string;
+  isMain: boolean;
+  isCurrent: boolean;
+  isClean?: boolean;
+  commitMessage?: string;
+}
+
+/**
+ * Lists all git worktrees in the repository with detailed information.
  *
  * @param repoPath - The repository path. Defaults to current working directory.
  * @returns Array of worktree information objects.
@@ -197,14 +210,10 @@ export function createWorktree(
  * @example
  * ```typescript
  * const worktrees = listWorktrees();
- * worktrees.forEach(wt => console.log(`${wt.branch}: ${wt.path}`));
+ * worktrees.forEach(wt => console.log(`${wt.branch}: ${wt.path} (${wt.isMain ? 'main' : 'worktree'})`));
  * ```
  */
-export function listWorktrees(repoPath: string = process.cwd()): Array<{
-  path: string;
-  branch: string;
-  commit: string;
-}> {
+export function listWorktrees(repoPath: string = process.cwd()): WorktreeInfo[] {
   try {
     const result = execSync("git worktree list --porcelain", {
       cwd: repoPath,
@@ -212,32 +221,126 @@ export function listWorktrees(repoPath: string = process.cwd()): Array<{
       stdio: "pipe",
     });
 
-    const worktrees: Array<{ path: string; branch: string; commit: string }> = [];
+    const worktrees: WorktreeInfo[] = [];
     const lines = result.trim().split("\n");
+    const currentPath = path.resolve(repoPath);
     
-    let currentWorktree: Partial<{ path: string; branch: string; commit: string }> = {};
+    let currentWorktree: Partial<WorktreeInfo> = {};
     
     for (const line of lines) {
       if (line.startsWith("worktree ")) {
         if (Object.keys(currentWorktree).length > 0) {
-          worktrees.push(currentWorktree as { path: string; branch: string; commit: string });
+          worktrees.push(currentWorktree as WorktreeInfo);
         }
-        currentWorktree = { path: line.substring(9) };
+        const worktreePath = line.substring(9);
+        currentWorktree = { 
+          path: worktreePath,
+          isMain: false,
+          isCurrent: path.resolve(worktreePath) === currentPath
+        };
       } else if (line.startsWith("HEAD ")) {
         currentWorktree.commit = line.substring(5);
       } else if (line.startsWith("branch ")) {
-        currentWorktree.branch = line.substring(7);
+        const branchRef = line.substring(7);
+        currentWorktree.branch = branchRef.replace("refs/heads/", "");
+        // Mark as main if it's the default branch
+        currentWorktree.isMain = currentWorktree.branch === "main" || currentWorktree.branch === "master";
+      } else if (line.startsWith("bare") || line.startsWith("detached")) {
+        // Handle special cases - for now we'll skip these
       }
     }
     
     if (Object.keys(currentWorktree).length > 0) {
-      worktrees.push(currentWorktree as { path: string; branch: string; commit: string });
+      worktrees.push(currentWorktree as WorktreeInfo);
+    }
+
+    // Enrich with additional information
+    for (const worktree of worktrees) {
+      try {
+        // Get commit message
+        const commitMsg = execSync(`git log -1 --pretty=format:"%s" ${worktree.commit}`, {
+          cwd: repoPath,
+          encoding: "utf-8",
+          stdio: "pipe",
+        });
+        worktree.commitMessage = commitMsg.trim();
+
+        // Check if worktree is clean (only for existing directories)
+        if (fs.existsSync(worktree.path)) {
+          try {
+            const status = execSync("git status --porcelain", {
+              cwd: worktree.path,
+              encoding: "utf-8",
+              stdio: "pipe",
+            });
+            worktree.isClean = status.trim().length === 0;
+          } catch {
+            worktree.isClean = undefined; // Can't determine
+          }
+        }
+      } catch {
+        // If we can't get additional info, that's okay
+        worktree.commitMessage = undefined;
+        worktree.isClean = undefined;
+      }
     }
 
     return worktrees;
   } catch (error) {
     throw new Error(`Failed to list worktrees: ${error}`);
   }
+}
+
+/**
+ * Gets worktrees that belong to a specific claudectl project.
+ *
+ * @param projectName - Name of the claudectl project.
+ * @param repoPath - The repository path. Defaults to current working directory.
+ * @returns Array of worktree information for the project.
+ * @throws {Error} When git command fails.
+ *
+ * @example
+ * ```typescript
+ * const projectWorktrees = getProjectWorktrees("my-project");
+ * console.log(`Found ${projectWorktrees.length} worktrees for my-project`);
+ * ```
+ */
+export function getProjectWorktrees(projectName: string, repoPath: string = process.cwd()): WorktreeInfo[] {
+  const { getGlobalClaudectlDir } = require("./directories");
+  const allWorktrees = listWorktrees(repoPath);
+  const projectPath = path.join(getGlobalClaudectlDir(), "projects", projectName);
+  
+  return allWorktrees.filter(worktree => {
+    // Include main repository worktree and any worktrees in the project directory
+    return worktree.isMain || worktree.path.startsWith(projectPath);
+  });
+}
+
+/**
+ * Gets the worktree name from a worktree path.
+ *
+ * @param worktreePath - The full path to the worktree.
+ * @param projectName - Name of the claudectl project.
+ * @returns The worktree name or null if not a project worktree.
+ *
+ * @example
+ * ```typescript
+ * const name = getWorktreeName("/home/.claudectl/projects/my-project/brave-penguin", "my-project");
+ * console.log(name); // "brave-penguin"
+ * ```
+ */
+export function getWorktreeName(worktreePath: string, projectName: string): string | null {
+  const { getGlobalClaudectlDir } = require("./directories");
+  const projectPath = path.join(getGlobalClaudectlDir(), "projects", projectName);
+  
+  if (worktreePath.startsWith(projectPath)) {
+    const relativePath = path.relative(projectPath, worktreePath);
+    // Return the first directory name (the worktree name)
+    const parts = relativePath.split(path.sep);
+    return parts[0] || null;
+  }
+  
+  return null;
 }
 
 /**

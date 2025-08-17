@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { version } from "../package.json";
 import { initCommand } from "./commands/init";
 import { newCommand } from "./commands/new";
+import { listCommand } from "./commands/list";
 
 const program = new Command();
 
@@ -24,6 +25,13 @@ program
   .argument("[name]", "Worktree name (defaults to auto-generated name)")
   .action((name?: string) => {
     newCommand(name);
+  });
+
+program
+  .command("list")
+  .description("List all active worktrees for the current project")
+  .action(() => {
+    listCommand();
   });
 
 program.parse();

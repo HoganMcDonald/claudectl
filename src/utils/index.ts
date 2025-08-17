@@ -14,6 +14,9 @@ export {
   createWorktree,
   listWorktrees,
   removeWorktree,
+  getProjectWorktrees,
+  getWorktreeName,
+  type WorktreeInfo,
 } from "./git";
 
 // Directory management utilities
