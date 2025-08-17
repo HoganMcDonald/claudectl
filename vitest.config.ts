@@ -19,6 +19,7 @@ export default defineConfig({
         'src/**/*.test.ts',
         '__tests__/',
         'test/',
+        'scripts/',
         'vitest.config.ts',
       ],
     },

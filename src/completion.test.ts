@@ -203,6 +203,33 @@ describe('completion', () => {
       mockConsoleError.mockRestore();
       mockProcessExit.mockRestore();
     });
+
+    it('should handle auto-install failure gracefully', async () => {
+      const originalEnv = process.env.CLAUDECTL_AUTO_INSTALL;
+      process.env.CLAUDECTL_AUTO_INSTALL = 'true';
+      
+      const error = new Error('Installation failed');
+      vi.mocked(tabtab.default.install).mockRejectedValue(error);
+
+      await expect(installCompletion()).rejects.toThrow('Installation failed');
+
+      process.env.CLAUDECTL_AUTO_INSTALL = originalEnv;
+    });
+
+    it('should not show messages during auto-install', async () => {
+      const originalEnv = process.env.CLAUDECTL_AUTO_INSTALL;
+      process.env.CLAUDECTL_AUTO_INSTALL = 'true';
+      
+      const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+      vi.mocked(tabtab.default.install).mockResolvedValue(undefined);
+
+      await installCompletion();
+
+      expect(mockConsoleLog).not.toHaveBeenCalled();
+
+      mockConsoleLog.mockRestore();
+      process.env.CLAUDECTL_AUTO_INSTALL = originalEnv;
+    });
   });
 
   describe('uninstallCompletion', () => {
@@ -235,6 +262,33 @@ describe('completion', () => {
 
       mockConsoleError.mockRestore();
       mockProcessExit.mockRestore();
+    });
+
+    it('should handle auto-uninstall failure gracefully', async () => {
+      const originalEnv = process.env.CLAUDECTL_AUTO_UNINSTALL;
+      process.env.CLAUDECTL_AUTO_UNINSTALL = 'true';
+      
+      const error = new Error('Uninstallation failed');
+      vi.mocked(tabtab.default.uninstall).mockRejectedValue(error);
+
+      await expect(uninstallCompletion()).rejects.toThrow('Uninstallation failed');
+
+      process.env.CLAUDECTL_AUTO_UNINSTALL = originalEnv;
+    });
+
+    it('should not show messages during auto-uninstall', async () => {
+      const originalEnv = process.env.CLAUDECTL_AUTO_UNINSTALL;
+      process.env.CLAUDECTL_AUTO_UNINSTALL = 'true';
+      
+      const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+      vi.mocked(tabtab.default.uninstall).mockResolvedValue(undefined);
+
+      await uninstallCompletion();
+
+      expect(mockConsoleLog).not.toHaveBeenCalled();
+
+      mockConsoleLog.mockRestore();
+      process.env.CLAUDECTL_AUTO_UNINSTALL = originalEnv;
     });
   });
 });

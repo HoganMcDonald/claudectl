@@ -100,16 +100,36 @@ export async function handleCompletion(): Promise<void> {
  * Install tab completion for the current shell.
  */
 export async function installCompletion(): Promise<void> {
+  const isAutoInstall = process.env.CLAUDECTL_AUTO_INSTALL === 'true';
+  
   try {
-    await tabtab.install({
-      name: 'claudectl',
-      completer: 'claudectl',
-    });
-    console.log('✓ Tab completion installed successfully!');
-    console.log('  Restart your shell or run: source ~/.bashrc (or ~/.zshrc)');
+    // For automatic installation, use default options to avoid prompts
+    if (isAutoInstall) {
+      // Install silently for auto-install
+      await tabtab.install({
+        name: 'claudectl',
+        completer: 'claudectl',
+      });
+    } else {
+      // Interactive installation for manual installs
+      await tabtab.install({
+        name: 'claudectl',
+        completer: 'claudectl',
+      });
+    }
+    
+    if (!isAutoInstall) {
+      console.log('✓ Tab completion installed successfully!');
+      console.log('  Restart your shell or run: source ~/.bashrc (or ~/.zshrc)');
+    }
   } catch (error) {
-    console.error('✗ Failed to install tab completion:', error);
-    process.exit(1);
+    if (isAutoInstall) {
+      // Don't exit on auto-install failures, just return
+      throw error;
+    } else {
+      console.error('✗ Failed to install tab completion:', error);
+      process.exit(1);
+    }
   }
 }
 
@@ -117,13 +137,23 @@ export async function installCompletion(): Promise<void> {
  * Uninstall tab completion for the current shell.
  */
 export async function uninstallCompletion(): Promise<void> {
+  const isAutoUninstall = process.env.CLAUDECTL_AUTO_UNINSTALL === 'true';
+  
   try {
     await tabtab.uninstall({
       name: 'claudectl',
     });
-    console.log('✓ Tab completion uninstalled successfully!');
+    
+    if (!isAutoUninstall) {
+      console.log('✓ Tab completion uninstalled successfully!');
+    }
   } catch (error) {
-    console.error('✗ Failed to uninstall tab completion:', error);
-    process.exit(1);
+    if (isAutoUninstall) {
+      // Don't exit on auto-uninstall failures, just return
+      throw error;
+    } else {
+      console.error('✗ Failed to uninstall tab completion:', error);
+      process.exit(1);
+    }
   }
 }

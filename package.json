@@ -12,6 +12,8 @@
     "start": "node dist/cli.js",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
+    "postinstall": "node scripts/postinstall.js",
+    "preuninstall": "node scripts/preuninstall.js",
     "lint": "biome lint src/",
     "format": "biome format --write src/",
     "check": "biome check --write src/",
@@ -31,7 +33,8 @@
   "author": "",
   "license": "MIT",
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "scripts/**/*"
   ],
   "devDependencies": {
     "@biomejs/biome": "^2.2.0",
