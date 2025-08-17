@@ -8,6 +8,12 @@
 // Git utilities
 export {
   isGitRepository,
+  getCurrentBranch,
+  getDefaultBranch,
+  updateBranch,
+  createWorktree,
+  listWorktrees,
+  removeWorktree,
 } from "./git";
 
 // Directory management utilities

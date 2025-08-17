@@ -261,14 +261,14 @@ describe('output utilities', () => {
 
       const calls = consoleLogSpy.mock.calls;
       expect(calls.length).toBeGreaterThan(2);
-      
+
       // Check headers
       expect(calls[0][0]).toContain('Name');
       expect(calls[0][0]).toContain('Status');
-      
+
       // Check separator line
       expect(calls[1][0]).toContain('─');
-      
+
       // Check data rows
       expect(calls.some(call => call[0].includes('project-1'))).toBe(true);
       expect(calls.some(call => call[0].includes('project-2'))).toBe(true);
