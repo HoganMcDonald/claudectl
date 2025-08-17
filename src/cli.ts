@@ -1,10 +1,12 @@
+#!/usr/bin/env node
+
 import { Command } from "commander";
 import { version } from "../package.json";
 import { initCommand } from "./commands/init";
 import { newCommand } from "./commands/new";
 import { listCommand } from "./commands/list";
 import { rmCommand } from "./commands/rm";
-import { handleCompletion, installCompletion, uninstallCompletion } from "./completion";
+import { handleCompletion } from "./completion";
 
 const program = new Command();
 
@@ -45,18 +47,16 @@ program
     rmCommand(name, options);
   });
 
+// Hidden completion command for tabtab
 program
-  .command("install-completion")
-  .description("Install tab completion for your shell")
-  .action(async () => {
-    await installCompletion();
-  });
-
-program
-  .command("uninstall-completion")
-  .description("Uninstall tab completion for your shell")
-  .action(async () => {
-    await uninstallCompletion();
+  .command("completion", { hidden: true })
+  .description("Generate completion script")
+  .action(() => {
+    // When called normally (not for completion), show a helpful message
+    // But when called for completion, this won't execute because
+    // handleCompletion() will have already handled it and exited
+    console.log('Tab completion is handled automatically by the shell.');
+    console.log('To set up completion, use: tabtab install --name claudectl --completer claudectl');
   });
 
 // Handle tab completion before parsing
