@@ -6,6 +6,7 @@ import {
   getProjectDir,
   createWorktree,
   getDefaultBranch,
+  generateRandomName,
 } from "../utils";
 import {
   error,
@@ -20,14 +21,12 @@ import {
 } from "../output";
 
 /**
- * Generates a unique worktree name with timestamp.
+ * Generates a friendly worktree name using adjective-animal pattern.
  *
- * @param baseName - Base name for the worktree (defaults to "context").
- * @returns A unique worktree name.
+ * @returns A friendly worktree name like "brave-penguin" or "swift-fox".
  */
-function generateWorktreeName(baseName: string = "context"): string {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  return `${baseName}-${timestamp}`;
+function generateWorktreeName(): string {
+  return generateRandomName();
 }
 
 /**

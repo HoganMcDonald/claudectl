@@ -12,6 +12,7 @@ vi.mock('../utils', () => ({
   getProjectDir: vi.fn(),
   createWorktree: vi.fn(),
   getDefaultBranch: vi.fn(),
+  generateRandomName: vi.fn(),
 }));
 
 vi.mock('../output', () => ({
@@ -27,7 +28,7 @@ vi.mock('../output', () => ({
 }));
 
 // Import the mocked functions
-const { isGitRepository, hasClaudectlConfig, loadProjectConfig, getProjectDir, createWorktree, getDefaultBranch } = await import('../utils');
+const { isGitRepository, hasClaudectlConfig, loadProjectConfig, getProjectDir, createWorktree, getDefaultBranch, generateRandomName } = await import('../utils');
 const { error, info, success, indentedSuccess, instruction, step, section, fatal } = await import('../output');
 
 describe('new command', () => {
@@ -72,6 +73,7 @@ describe('new command', () => {
       vi.mocked(loadProjectConfig).mockReturnValue({ name: 'test-project' });
       vi.mocked(getProjectDir).mockReturnValue('/home/.claudectl/projects/test-project');
       vi.mocked(getDefaultBranch).mockReturnValue('main');
+      vi.mocked(generateRandomName).mockReturnValue('brave-penguin');
       vi.mocked(createWorktree).mockImplementation(() => {});
 
       newCommand();
@@ -94,8 +96,8 @@ describe('new command', () => {
 
       // Should create worktree with auto-generated name
       expect(createWorktree).toHaveBeenCalledWith(
-        expect.stringContaining('/home/.claudectl/projects/test-project/context-'),
-        expect.stringMatching(/^context-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}$/),
+        '/home/.claudectl/projects/test-project/brave-penguin',
+        'brave-penguin',
         'main',
         tempDir
       );
@@ -203,6 +205,7 @@ describe('new command', () => {
       vi.mocked(hasClaudectlConfig).mockReturnValue(true);
       vi.mocked(loadProjectConfig).mockReturnValue({ name: 'test-project' });
       vi.mocked(getProjectDir).mockReturnValue('/home/.claudectl/projects/test-project');
+      vi.mocked(generateRandomName).mockReturnValue('swift-fox');
       vi.mocked(getDefaultBranch).mockImplementation(() => {
         throw new Error('No default branch found');
       });
@@ -232,39 +235,46 @@ describe('new command', () => {
   });
 
   describe('auto-generated name format', () => {
-    it('should generate names in correct format', () => {
+    it('should generate names in adjective-animal format', () => {
       vi.mocked(isGitRepository).mockReturnValue(true);
       vi.mocked(hasClaudectlConfig).mockReturnValue(true);
       vi.mocked(loadProjectConfig).mockReturnValue({ name: 'test-project' });
       vi.mocked(getProjectDir).mockReturnValue('/home/.claudectl/projects/test-project');
       vi.mocked(getDefaultBranch).mockReturnValue('main');
+      vi.mocked(generateRandomName).mockReturnValue('clever-dolphin');
       vi.mocked(createWorktree).mockImplementation(() => {});
 
       newCommand();
 
       // Check that createWorktree was called with a properly formatted name
       expect(createWorktree).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.stringMatching(/^context-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}$/),
+        '/home/.claudectl/projects/test-project/clever-dolphin',
+        'clever-dolphin',
         'main',
         tempDir
       );
     });
 
-    it('should generate timestamp-based names', () => {
+    it('should generate friendly adjective-animal names', () => {
       vi.mocked(isGitRepository).mockReturnValue(true);
       vi.mocked(hasClaudectlConfig).mockReturnValue(true);
       vi.mocked(loadProjectConfig).mockReturnValue({ name: 'test-project' });
       vi.mocked(getProjectDir).mockReturnValue('/home/.claudectl/projects/test-project');
       vi.mocked(getDefaultBranch).mockReturnValue('main');
+      vi.mocked(generateRandomName).mockReturnValue('golden-eagle');
       vi.mocked(createWorktree).mockImplementation(() => {});
 
       newCommand();
 
-      // Check that createWorktree was called with a name containing timestamp patterns
+      // Check that createWorktree was called with adjective-animal pattern
       const actualBranchName = vi.mocked(createWorktree).mock.calls[0][1];
-      expect(actualBranchName).toMatch(/^context-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}$/);
-      expect(actualBranchName).toContain('context-');
+      expect(actualBranchName).toBe('golden-eagle');
+      expect(actualBranchName).toMatch(/^[a-z]+-[a-z]+$/);
+      
+      const parts = actualBranchName.split('-');
+      expect(parts).toHaveLength(2);
+      expect(parts[0]).toBe('golden');
+      expect(parts[1]).toBe('eagle');
     });
   });
 

@@ -39,3 +39,13 @@ export {
   type InitStepError,
   type InitStepOutcome,
 } from "./initialization";
+
+// Name generation utilities
+export {
+  generateRandomName,
+  generateUniqueNames,
+  isValidAdjectiveAnimalName,
+  getTotalCombinations,
+  generateNameWithAdjective,
+  generateNameWithAnimal,
+} from "./naming";
