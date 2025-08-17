@@ -3,6 +3,7 @@ import { version } from "../package.json";
 import { initCommand } from "./commands/init";
 import { newCommand } from "./commands/new";
 import { listCommand } from "./commands/list";
+import { rmCommand } from "./commands/rm";
 
 const program = new Command();
 
@@ -32,6 +33,15 @@ program
   .description("List all active worktrees for the current project")
   .action(() => {
     listCommand();
+  });
+
+program
+  .command("rm")
+  .description("Remove a session/worktree by name")
+  .argument("<name>", "Name of the session to remove")
+  .option("-f, --force", "Force removal even if session has uncommitted changes")
+  .action((name: string, options: { force?: boolean }) => {
+    rmCommand(name, options);
   });
 
 program.parse();

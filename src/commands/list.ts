@@ -15,6 +15,9 @@ import {
   table,
   blank,
   fatal,
+  success,
+  emphasis,
+  dim,
 } from "../output";
 
 /**
@@ -153,4 +156,23 @@ export const listCommand = (): void => {
 
   // Display table
   table(headers, rows);
+
+  // Show current worktree info
+  const currentTask = tasks.find(task => task.isCurrent);
+  if (currentTask) {
+    blank();
+    const currentName = getTaskDisplayName(currentTask, projectConfig.name);
+    success(`Currently in worktree: ${currentName}`);
+  }
+
+  // Show switch instructions
+  blank();
+  emphasis("Switch to a worktree:");
+  tasks.forEach(task => {
+    if (!task.isCurrent) {
+      const displayName = getTaskDisplayName(task, projectConfig.name);
+      const comment = task.isMain ? "main" : displayName;
+      dim(`  cd ${task.path}  # ${comment}`);
+    }
+  });
 };

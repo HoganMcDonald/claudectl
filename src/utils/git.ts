@@ -344,6 +344,93 @@ export function getWorktreeName(worktreePath: string, projectName: string): stri
 }
 
 /**
+ * Finds a worktree by name within a specific project.
+ *
+ * @param worktreeName - Name of the worktree to find.
+ * @param projectName - Name of the claudectl project.
+ * @param repoPath - The repository path. Defaults to current working directory.
+ * @returns The worktree information or null if not found.
+ * @throws {Error} When git command fails.
+ *
+ * @example
+ * ```typescript
+ * const worktree = findWorktreeByName("brave-penguin", "my-project");
+ * if (worktree) {
+ *   console.log(`Found worktree at: ${worktree.path}`);
+ * }
+ * ```
+ */
+export function findWorktreeByName(
+  worktreeName: string,
+  projectName: string,
+  repoPath: string = process.cwd()
+): WorktreeInfo | null {
+  const projectWorktrees = getProjectWorktrees(projectName, repoPath);
+  
+  return projectWorktrees.find(worktree => {
+    if (worktree.isMain && worktreeName === "main") {
+      return true;
+    }
+    
+    const name = getWorktreeName(worktree.path, projectName);
+    return name === worktreeName;
+  }) || null;
+}
+
+/**
+ * Removes a worktree by name from a specific project.
+ *
+ * @param worktreeName - Name of the worktree to remove.
+ * @param projectName - Name of the claudectl project.
+ * @param repoPath - The repository path. Defaults to current working directory.
+ * @param force - Whether to force removal even if worktree has uncommitted changes.
+ * @returns The removed worktree information.
+ * @throws {Error} When worktree is not found, is the main repository, or removal fails.
+ *
+ * @example
+ * ```typescript
+ * const removed = removeWorktreeByName("brave-penguin", "my-project");
+ * console.log(`Removed worktree: ${removed.path}`);
+ * ```
+ */
+export function removeWorktreeByName(
+  worktreeName: string,
+  projectName: string,
+  repoPath: string = process.cwd(),
+  force: boolean = false
+): WorktreeInfo {
+  // Find the worktree
+  const worktree = findWorktreeByName(worktreeName, projectName, repoPath);
+  
+  if (!worktree) {
+    throw new Error(`Worktree "${worktreeName}" not found in project "${projectName}"`);
+  }
+  
+  // Prevent removal of main repository
+  if (worktree.isMain) {
+    throw new Error('Cannot remove main repository worktree');
+  }
+  
+  // Prevent removal of current worktree
+  if (worktree.isCurrent) {
+    throw new Error('Cannot remove current worktree. Please switch to another worktree first');
+  }
+  
+  // Check for uncommitted changes unless forced
+  if (!force && worktree.isClean === false) {
+    throw new Error(`Worktree "${worktreeName}" has uncommitted changes. Use --force to remove anyway`);
+  }
+  
+  // Remove the worktree
+  try {
+    removeWorktree(worktree.path, repoPath, force);
+    return worktree;
+  } catch (error) {
+    throw new Error(`Failed to remove worktree: ${error}`);
+  }
+}
+
+/**
  * Removes a git worktree.
  *
  * @param worktreePath - The path of the worktree to remove.

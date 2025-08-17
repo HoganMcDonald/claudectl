@@ -16,6 +16,8 @@ export {
   removeWorktree,
   getProjectWorktrees,
   getWorktreeName,
+  findWorktreeByName,
+  removeWorktreeByName,
   type WorktreeInfo,
 } from "./git";
 

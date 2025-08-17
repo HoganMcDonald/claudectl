@@ -102,7 +102,7 @@ describe('list command', () => {
       listCommand();
 
       // Should show section header
-      expect(section).toHaveBeenCalledWith('Worktrees for project "test-project"');
+      expect(section).toHaveBeenCalledWith('Tasks for project "test-project"');
 
       // Should display table with correct headers
       expect(table).toHaveBeenCalledWith(
@@ -129,9 +129,9 @@ describe('list command', () => {
 
       listCommand();
 
-      expect(section).toHaveBeenCalledWith('Worktrees for project "empty-project"');
-      expect(info).toHaveBeenCalledWith('No worktrees found for this project');
-      expect(info).toHaveBeenCalledWith('Create a new worktree with: claudectl new [name]');
+      expect(section).toHaveBeenCalledWith('Tasks for project "empty-project"');
+      expect(info).toHaveBeenCalledWith('No tasks found for this project');
+      expect(info).toHaveBeenCalledWith('Create a new task with: claudectl new [name]');
       
       // Should not display table
       expect(table).not.toHaveBeenCalled();
@@ -256,9 +256,9 @@ describe('list command', () => {
         throw new Error('Git command failed');
       });
 
-      expect(() => listCommand()).toThrow('fatal: failed to list worktrees: Git command failed');
+      expect(() => listCommand()).toThrow('fatal: failed to list tasks: Git command failed');
 
-      expect(fatal).toHaveBeenCalledWith('failed to list worktrees: Git command failed');
+      expect(fatal).toHaveBeenCalledWith('failed to list tasks: Git command failed');
     });
   });
 
@@ -302,7 +302,7 @@ describe('list command', () => {
 
       listCommand();
 
-      expect(info).toHaveBeenCalledWith('Create a new worktree with: claudectl new [name]');
+      expect(info).toHaveBeenCalledWith('Create a new task with: claudectl new [name]');
     });
 
     it('should handle worktrees without branches', () => {
