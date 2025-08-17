@@ -25,7 +25,7 @@ export async function handleCompletion(): Promise<void> {
   
   // Main commands completion (when typing just "claudectl " or partial command)
   if (wordCount === 1 || (wordCount === 2 && !env.line.endsWith(' '))) {
-    completions = ['init', 'new', 'list', 'rm'];
+    completions = ['init', 'new', 'list', 'rm', 'attach'];
   }
   // Arguments and options completion
   else if (wordCount >= 2) {
@@ -39,6 +39,13 @@ export async function handleCompletion(): Promise<void> {
         } else if (wordCount >= 3) {
           // Complete with flags
           completions = ['--force', '-f'];
+        }
+        break;
+        
+      case 'attach':
+        if (wordCount === 2 || (wordCount === 3 && !env.line.endsWith(' '))) {
+          // Complete with available session names
+          completions = getAvailableSessions();
         }
         break;
         

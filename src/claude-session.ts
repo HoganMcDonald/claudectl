@@ -22,6 +22,7 @@ export interface ClaudeSessionInfo {
   sessionName: string;
   workingDirectory: string;
   startTime: Date;
+  lastAccessed: Date;
   useContainer: boolean;
 }
 
@@ -55,9 +56,10 @@ export class ClaudeSessionManager {
       const content = fs.readFileSync(this.sessionsFile, 'utf8');
       const sessions = JSON.parse(content);
       
-      // Convert startTime strings back to Date objects
+      // Convert date strings back to Date objects
       Object.values(sessions).forEach((session: any) => {
         session.startTime = new Date(session.startTime);
+        session.lastAccessed = new Date(session.lastAccessed || session.startTime);
       });
       
       return sessions;
@@ -133,6 +135,7 @@ export class ClaudeSessionManager {
       sessionName,
       workingDirectory,
       startTime: new Date(),
+      lastAccessed: new Date(),
       useContainer
     };
 
@@ -201,6 +204,24 @@ export class ClaudeSessionManager {
   static getSession(sessionName: string): ClaudeSessionInfo | null {
     const sessions = this.loadSessions();
     return sessions[sessionName] || null;
+  }
+
+  /**
+   * Update the last accessed timestamp for a session
+   */
+  static updateLastAccessed(sessionName: string): boolean {
+    const sessions = this.loadSessions();
+    const session = sessions[sessionName];
+    
+    if (!session) {
+      return false;
+    }
+    
+    session.lastAccessed = new Date();
+    sessions[sessionName] = session;
+    this.saveSessions(sessions);
+    
+    return true;
   }
 
   /**

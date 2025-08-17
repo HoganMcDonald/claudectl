@@ -6,6 +6,7 @@ import { initCommand } from "./commands/init";
 import { newCommand } from "./commands/new";
 import { listCommand } from "./commands/list";
 import { rmCommand } from "./commands/rm";
+import { attachCommand } from "./commands/attach";
 import { handleCompletion } from "./completion";
 
 const program = new Command();
@@ -45,6 +46,14 @@ program
   .option("-f, --force", "Force removal even if session has uncommitted changes")
   .action(async (name: string, options: { force?: boolean }) => {
     await rmCommand(name, options);
+  });
+
+program
+  .command("attach")
+  .description("Attach to an existing session")
+  .argument("<name>", "Name of the session to attach to")
+  .action(async (name: string) => {
+    await attachCommand(name);
   });
 
 // Hidden completion command for tabtab
