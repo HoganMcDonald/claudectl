@@ -10,13 +10,10 @@ import {
 import {
   error,
   info,
-  success,
   instruction,
   section,
   table,
   blank,
-  dim,
-  emphasis,
   fatal,
 } from "../output";
 
@@ -31,50 +28,28 @@ function formatCommitHash(commit: string): string {
 }
 
 /**
- * Formats a worktree path for display.
+ * Formats the status column for a task.
  *
- * @param worktreePath - The full worktree path.
- * @param projectName - The project name.
- * @returns A user-friendly display path.
- */
-function formatWorktreePath(worktreePath: string, projectName: string): string {
-  const name = getWorktreeName(worktreePath, projectName);
-  if (name) {
-    return `~/.claudectl/projects/${projectName}/${name}`;
-  }
-  
-  // For main repository, show relative to home
-  const homeDir = process.env.HOME || process.env.USERPROFILE || "";
-  if (homeDir && worktreePath.startsWith(homeDir)) {
-    return `~${worktreePath.substring(homeDir.length)}`;
-  }
-  
-  return worktreePath;
-}
-
-/**
- * Formats the status column for a worktree.
- *
- * @param worktree - The worktree information.
+ * @param task - The task information.
  * @returns Formatted status string.
  */
-function formatStatus(worktree: WorktreeInfo): string {
+function formatStatus(task: WorktreeInfo): string {
   const parts: string[] = [];
-  
-  if (worktree.isMain) {
+
+  if (task.isMain) {
     parts.push("main");
   }
-  
-  if (worktree.isCurrent) {
+
+  if (task.isCurrent) {
     parts.push("current");
   }
-  
-  if (worktree.isClean === true) {
+
+  if (task.isClean === true) {
     parts.push("clean");
-  } else if (worktree.isClean === false) {
+  } else if (task.isClean === false) {
     parts.push("dirty");
   }
-  
+
   return parts.join(", ") || "-";
 }
 
@@ -89,32 +64,32 @@ function formatCommitMessage(message: string | undefined, maxLength: number = 50
   if (!message) {
     return "-";
   }
-  
+
   if (message.length <= maxLength) {
     return message;
   }
-  
+
   return `${message.substring(0, maxLength - 3)}...`;
 }
 
 /**
- * Gets the display name for a worktree.
+ * Gets the display name for a task.
  *
- * @param worktree - The worktree information.
+ * @param task - The task information.
  * @param projectName - The project name.
  * @returns The display name.
  */
-function getWorktreeDisplayName(worktree: WorktreeInfo, projectName: string): string {
-  if (worktree.isMain) {
+function getTaskDisplayName(task: WorktreeInfo, projectName: string): string {
+  if (task.isMain) {
     return "main";
   }
-  
-  const name = getWorktreeName(worktree.path, projectName);
-  return name || path.basename(worktree.path);
+
+  const name = getWorktreeName(task.path, projectName);
+  return name || path.basename(task.path);
 }
 
 /**
- * Lists all active worktrees for the current claudectl project.
+ * Lists all active tasks for the current claudectl project.
  */
 export const listCommand = (): void => {
   const currentDir = process.cwd();
@@ -147,57 +122,35 @@ export const listCommand = (): void => {
     fatal("failed to load project configuration");
   }
 
-  // Get all worktrees for this project
-  let worktrees: WorktreeInfo[];
+  // Get all tasks for this project
+  let tasks: WorktreeInfo[];
   try {
-    worktrees = getProjectWorktrees(projectConfig.name, currentDir);
+    tasks = getProjectWorktrees(projectConfig.name, currentDir);
   } catch (err) {
-    fatal(`failed to list worktrees: ${err instanceof Error ? err.message : String(err)}`);
+    fatal(`failed to list tasks: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   // Display results
-  section(`Worktrees for project "${projectConfig.name}"`);
+  section(`Tasks for project "${projectConfig.name}"`);
   blank();
 
-  if (worktrees.length === 0) {
-    info("No worktrees found for this project");
+  if (tasks.length === 0) {
+    info("No tasks found for this project");
     blank();
-    info("Create a new worktree with: claudectl new [name]");
+    info("Create a new task with: claudectl new [name]");
     return;
   }
 
   // Prepare table data
   const headers = ["Name", "Branch", "Commit", "Status", "Last Commit"];
-  const rows = worktrees.map(worktree => [
-    getWorktreeDisplayName(worktree, projectConfig.name),
-    worktree.branch || "-",
-    formatCommitHash(worktree.commit),
-    formatStatus(worktree),
-    formatCommitMessage(worktree.commitMessage)
+  const rows = tasks.map(task => [
+    getTaskDisplayName(task, projectConfig.name),
+    task.branch || "-",
+    formatCommitHash(task.commit),
+    formatStatus(task),
+    formatCommitMessage(task.commitMessage)
   ]);
 
   // Display table
   table(headers, rows);
-  blank();
-
-  // Show helpful information
-  const currentWorktree = worktrees.find(wt => wt.isCurrent);
-  if (currentWorktree) {
-    const currentName = getWorktreeDisplayName(currentWorktree, projectConfig.name);
-    success(`Currently in worktree: ${currentName}`);
-  }
-
-  const otherWorktrees = worktrees.filter(wt => !wt.isCurrent);
-  if (otherWorktrees.length > 0) {
-    blank();
-    emphasis("Switch to a worktree:");
-    otherWorktrees.forEach(worktree => {
-      const name = getWorktreeDisplayName(worktree, projectConfig.name);
-      const displayPath = formatWorktreePath(worktree.path, projectConfig.name);
-      dim(`  cd ${displayPath}  # ${name}`);
-    });
-  }
-
-  blank();
-  info("Create a new worktree with: claudectl new [name]");
 };
