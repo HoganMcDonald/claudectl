@@ -4,6 +4,7 @@ import { initCommand } from "./commands/init";
 import { newCommand } from "./commands/new";
 import { listCommand } from "./commands/list";
 import { rmCommand } from "./commands/rm";
+import { handleCompletion, installCompletion, uninstallCompletion } from "./completion";
 
 const program = new Command();
 
@@ -44,4 +45,21 @@ program
     rmCommand(name, options);
   });
 
-program.parse();
+program
+  .command("install-completion")
+  .description("Install tab completion for your shell")
+  .action(async () => {
+    await installCompletion();
+  });
+
+program
+  .command("uninstall-completion")
+  .description("Uninstall tab completion for your shell")
+  .action(async () => {
+    await uninstallCompletion();
+  });
+
+// Handle tab completion before parsing
+handleCompletion().then(() => {
+  program.parse();
+});
