@@ -69,8 +69,10 @@ export async function handleCompletion(): Promise<void> {
 
   tabtab.log(completions);
 
-  // Exit immediately to prevent command execution
-  process.exit(0);
+  // Exit immediately to prevent command execution (skip in tests)
+  if (process.env.NODE_ENV !== 'test') {
+    process.exit(0);
+  }
 }
 
 /**
