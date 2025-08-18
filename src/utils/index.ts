@@ -5,31 +5,6 @@
  * to provide a clean, organized API while maintaining backward compatibility.
  */
 
-// Git utilities
-export {
-  isGitRepository,
-  getCurrentBranch,
-  getDefaultBranch,
-  updateBranch,
-  createWorktree,
-  listWorktrees,
-  removeWorktree,
-  getProjectWorktrees,
-  getWorktreeName,
-  findWorktreeByName,
-  removeWorktreeByName,
-  type WorktreeInfo,
-} from "./git.js";
-
-// Directory management utilities
-export {
-  getGlobalClaudectlDir,
-  getProjectsDir,
-  getProjectDir,
-  ensureDirectory,
-  hasClaudectlConfig,
-} from "./directories.js";
-
 // Project configuration utilities
 export {
   createProjectConfig,
@@ -37,15 +12,37 @@ export {
   updateProjectConfig,
 } from "./config.js";
 
+// Directory management utilities
+export {
+  ensureDirectory,
+  getGlobalClaudectlDir,
+  getProjectDir,
+  getProjectsDir,
+  hasClaudectlConfig,
+} from "./directories.js";
+// Git utilities
+export {
+  createWorktree,
+  findWorktreeByName,
+  getCurrentBranch,
+  getDefaultBranch,
+  getProjectWorktrees,
+  getWorktreeName,
+  isGitRepository,
+  listWorktrees,
+  removeWorktree,
+  removeWorktreeByName,
+  updateBranch,
+  type WorktreeInfo,
+} from "./git.js";
+
 // Multi-step initialization utilities
 export {
-  performMultiStepInit,
-  type InitStepResult,
   type InitStepError,
   type InitStepOutcome,
+  type InitStepResult,
+  performMultiStepInit,
 } from "./initialization.js";
 
 // Name generation utilities
-export {
-  generateRandomName,
-} from "./naming.js";
+export { generateRandomName } from "./naming.js";
