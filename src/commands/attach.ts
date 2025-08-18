@@ -1,11 +1,6 @@
 import { spawn } from "node:child_process";
 import { ClaudeSessionManager } from "../claude-session.js";
-import {
-  error,
-  info,
-  success,
-  instruction,
-} from "../output.js";
+import { error, info, instruction, success } from "../output.js";
 import { validateSessionName } from "../utils/errors.js";
 
 /**
@@ -26,10 +21,10 @@ export const attachCommand = async (sessionName: string): Promise<void> => {
   const session = ClaudeSessionManager.getSession(sessionName);
   if (!session) {
     error(`Session "${sessionName}" not found`);
-    instruction(
-      "Create the session first or choose an existing one:",
-      [`claudectl new ${sessionName}`, "claudectl list"]
-    );
+    instruction("Create the session first or choose an existing one:", [
+      `claudectl new ${sessionName}`,
+      "claudectl list",
+    ]);
     process.exit(1);
   }
 
@@ -38,37 +33,35 @@ export const attachCommand = async (sessionName: string): Promise<void> => {
 
   // Start Claude in foreground in the session directory
   info(`Attaching to session "${sessionName}"`);
-  
+
   try {
-    const child = spawn('claude', ['.'], { 
+    const child = spawn("claude", ["."], {
       cwd: session.workingDirectory,
-      stdio: 'inherit' // User controls the session directly
+      stdio: "inherit", // User controls the session directly
     });
-    
+
     // Wait for user to exit Claude
     await new Promise<void>((resolve, reject) => {
-      child.on('close', (code) => {
+      child.on("close", (_code) => {
         resolve();
       });
-      
-      child.on('error', (err) => {
+
+      child.on("error", (err) => {
         reject(err);
       });
     });
-    
+
     success(`Detached from session "${sessionName}"`);
-    
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     error(`Failed to start Claude Code: ${errorMessage}`);
-    
-    if (errorMessage.includes('ENOENT')) {
-      instruction(
-        "Claude Code is not installed or not in PATH:",
-        ["Install Claude Code from https://claude.ai/code"]
-      );
+
+    if (errorMessage.includes("ENOENT")) {
+      instruction("Claude Code is not installed or not in PATH:", [
+        "Install Claude Code from https://claude.ai/code",
+      ]);
     }
-    
+
     process.exit(1);
   }
 };

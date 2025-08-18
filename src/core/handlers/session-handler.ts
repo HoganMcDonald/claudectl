@@ -1,19 +1,26 @@
+import { spawn } from "node:child_process";
 import * as path from "node:path";
 import {
-  isGitRepository,
-  hasClaudectlConfig,
-  loadProjectConfig,
-  getProjectDir,
+  type ClaudeSessionInfo,
+  ClaudeSessionManager,
+} from "../../claude-session.js";
+import {
   createWorktree,
-  getDefaultBranch,
   generateRandomName,
+  getDefaultBranch,
+  getProjectDir,
   getProjectWorktrees,
   getWorktreeName,
-  type WorktreeInfo,
+  hasClaudectlConfig,
+  isGitRepository,
+  loadProjectConfig,
 } from "../../utils.js";
-import { ClaudeSessionManager, type ClaudeSessionInfo } from "../../claude-session.js";
-import { SessionInfo, SessionResult, ClaudeStatus, GitStatus } from "../types/session.js";
-import { spawn } from "node:child_process";
+import type {
+  ClaudeStatus,
+  GitStatus,
+  SessionInfo,
+  SessionResult,
+} from "../types/session.js";
 
 export class SessionHandler {
   /**
@@ -24,11 +31,17 @@ export class SessionHandler {
 
     // Validation
     if (!isGitRepository(currentDir)) {
-      return { success: false, error: "Current directory is not a git repository" };
+      return {
+        success: false,
+        error: "Current directory is not a git repository",
+      };
     }
 
     if (!hasClaudectlConfig(currentDir)) {
-      return { success: false, error: "Current directory is not a claudectl project" };
+      return {
+        success: false,
+        error: "Current directory is not a claudectl project",
+      };
     }
 
     // Load project configuration
@@ -41,7 +54,7 @@ export class SessionHandler {
 
     // Generate session name if not provided
     const sessionName = name || generateRandomName();
-    
+
     // Get project directory path
     const projectDir = getProjectDir(projectConfig.name);
     const worktreePath = path.join(projectDir, sessionName);
@@ -51,24 +64,30 @@ export class SessionHandler {
     try {
       defaultBranch = getDefaultBranch(currentDir);
     } catch (err) {
-      return { success: false, error: `Failed to determine default branch: ${err instanceof Error ? err.message : String(err)}` };
+      return {
+        success: false,
+        error: `Failed to determine default branch: ${err instanceof Error ? err.message : String(err)}`,
+      };
     }
 
     try {
       // Create the worktree
       createWorktree(worktreePath, sessionName, defaultBranch, currentDir);
-      
+
       // Start Claude Code session
       const session = await ClaudeSessionManager.startSession({
         workingDirectory: worktreePath,
         sessionName,
         useContainer: true,
-        dangerouslySkipPermissions: true
+        dangerouslySkipPermissions: true,
       });
 
       return { success: true, session };
     } catch (err) {
-      return { success: false, error: err instanceof Error ? err.message : String(err) };
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : String(err),
+      };
     }
   }
 
@@ -85,16 +104,16 @@ export class SessionHandler {
 
     try {
       const projectConfig = loadProjectConfig(currentDir);
-      
+
       // Get all worktrees (excluding main)
       const allWorktrees = getProjectWorktrees(projectConfig.name, currentDir);
-      const worktrees = allWorktrees.filter(w => !w.isMain);
+      const worktrees = allWorktrees.filter((w) => !w.isMain);
 
       // Clean up dead sessions and get active ones
       ClaudeSessionManager.cleanupSessions();
       const sessions = ClaudeSessionManager.listSessions();
       const sessionMap = new Map<string, ClaudeSessionInfo>();
-      
+
       // Map sessions by name
       for (const session of sessions) {
         sessionMap.set(session.sessionName, session);
@@ -102,14 +121,16 @@ export class SessionHandler {
 
       // Combine worktree and session information
       const sessionInfos: SessionInfo[] = [];
-      
+
       for (const worktree of worktrees) {
         const name = getWorktreeName(worktree.path, projectConfig.name);
         if (!name) continue;
 
         const session = sessionMap.get(name);
-        const claudeStatus = session ? await this.getClaudeStatus(session) : 'idle';
-        const gitStatus = await this.getGitStatus(worktree.path);
+        const claudeStatus = session
+          ? await SessionHandler.getClaudeStatus(session)
+          : "idle";
+        const gitStatus = await SessionHandler.getGitStatus(worktree.path);
 
         sessionInfos.push({
           pid: session?.pid || 0,
@@ -122,13 +143,13 @@ export class SessionHandler {
           claudeStatus,
           branch: worktree.branch,
           lastCommit: worktree.commitMessage,
-          isMain: worktree.isMain
+          isMain: worktree.isMain,
         });
       }
 
       return sessionInfos;
     } catch (err) {
-      console.warn('Failed to list sessions:', err);
+      console.warn("Failed to list sessions:", err);
       return [];
     }
   }
@@ -136,11 +157,11 @@ export class SessionHandler {
   /**
    * Remove a session
    */
-  static async removeSession(name: string, force?: boolean): Promise<boolean> {
+  static async removeSession(name: string, _force?: boolean): Promise<boolean> {
     try {
       // Check if session exists
       const session = ClaudeSessionManager.getSession(name);
-      
+
       // Stop Claude session if it exists
       if (session) {
         await ClaudeSessionManager.stopSession(name);
@@ -148,10 +169,10 @@ export class SessionHandler {
 
       // TODO: Add worktree removal logic here
       // This would need to be extracted from the rm command
-      
+
       return true;
     } catch (err) {
-      console.error('Failed to remove session:', err);
+      console.error("Failed to remove session:", err);
       return false;
     }
   }
@@ -169,49 +190,53 @@ export class SessionHandler {
     ClaudeSessionManager.updateLastAccessed(name);
 
     // Start Claude in foreground
-    const child = spawn('claude', ['.'], { 
+    const child = spawn("claude", ["."], {
       cwd: session.workingDirectory,
-      stdio: 'inherit'
+      stdio: "inherit",
     });
-    
+
     // Wait for user to exit Claude
     await new Promise<void>((resolve, reject) => {
-      child.on('close', () => resolve());
-      child.on('error', (err) => reject(err));
+      child.on("close", () => resolve());
+      child.on("error", (err) => reject(err));
     });
   }
 
   /**
    * Get Claude status for a session
    */
-  private static async getClaudeStatus(session: ClaudeSessionInfo): Promise<ClaudeStatus> {
+  private static async getClaudeStatus(
+    session: ClaudeSessionInfo
+  ): Promise<ClaudeStatus> {
     try {
       // Check if process is still running
       process.kill(session.pid, 0);
-      return 'active';
+      return "active";
     } catch {
-      return 'idle';
+      return "idle";
     }
   }
 
   /**
    * Get git status for a worktree
    */
-  private static async getGitStatus(workingDirectory: string): Promise<GitStatus> {
+  private static async getGitStatus(
+    workingDirectory: string
+  ): Promise<GitStatus> {
     try {
       // Check working tree status
       const statusResult = await new Promise<boolean>((resolve) => {
-        const child = spawn('git', ['diff-index', '--quiet', 'HEAD'], { 
+        const child = spawn("git", ["diff-index", "--quiet", "HEAD"], {
           cwd: workingDirectory,
-          stdio: 'pipe'
+          stdio: "pipe",
         });
-        child.on('close', (code) => resolve(code === 0));
-        child.on('error', () => resolve(true)); // Assume clean on error
+        child.on("close", (code) => resolve(code === 0));
+        child.on("error", () => resolve(true)); // Assume clean on error
       });
 
-      return statusResult ? 'clean' : 'dirty';
+      return statusResult ? "clean" : "dirty";
     } catch {
-      return 'clean';
+      return "clean";
     }
   }
 }

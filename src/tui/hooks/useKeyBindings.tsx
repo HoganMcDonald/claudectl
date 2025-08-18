@@ -1,5 +1,5 @@
-import { useInput } from 'ink';
-import { useSession } from '../providers/SessionProvider.js';
+import { useInput } from "ink";
+import { useSession } from "../providers/SessionProvider.js";
 
 interface KeyBindingOptions {
   onQuit: () => void;
@@ -10,32 +10,34 @@ interface KeyBindingOptions {
 }
 
 export const useKeyBindings = (options: KeyBindingOptions) => {
-  const { 
-    sessions, 
-    selectedIndex, 
-    setSelectedIndex, 
-    attachSession, 
-    refreshSessions 
+  const {
+    sessions,
+    selectedIndex,
+    setSelectedIndex,
+    attachSession,
+    refreshSessions,
   } = useSession();
 
-  useInput((input: string, key: any) => {
+  useInput((input: string, key: { ctrl?: boolean; downArrow?: boolean; upArrow?: boolean; return?: boolean; delete?: boolean }) => {
     // Quit
-    if (input === 'q' || (key.ctrl && input === 'c')) {
+    if (input === "q" || (key.ctrl && input === "c")) {
       options.onQuit();
       return;
     }
 
     // Navigation
-    if (key.downArrow || input === 'j') {
+    if (key.downArrow || input === "j") {
       if (sessions.length > 0) {
         setSelectedIndex((selectedIndex + 1) % sessions.length);
       }
       return;
     }
 
-    if (key.upArrow || input === 'k') {
+    if (key.upArrow || input === "k") {
       if (sessions.length > 0) {
-        setSelectedIndex(selectedIndex === 0 ? sessions.length - 1 : selectedIndex - 1);
+        setSelectedIndex(
+          selectedIndex === 0 ? sessions.length - 1 : selectedIndex - 1
+        );
       }
       return;
     }
@@ -48,22 +50,22 @@ export const useKeyBindings = (options: KeyBindingOptions) => {
       return;
     }
 
-    if (input === 'n') {
+    if (input === "n") {
       options.onNewSession();
       return;
     }
 
-    if (input === 'd' || key.delete) {
+    if (input === "d" || key.delete) {
       options.onDeleteSession();
       return;
     }
 
-    if (input === 'a') {
+    if (input === "a") {
       options.onAttachSession();
       return;
     }
 
-    if (input === 'r') {
+    if (input === "r") {
       options.onRefresh();
       refreshSessions();
       return;

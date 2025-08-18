@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { createRequire } from "module";
+import { createRequire } from "node:module";
+
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
-import { initCommand } from "./commands/init.js";
-import { newCommand } from "./commands/new.js";
-import { listCommand } from "./commands/list.js";
-import { rmCommand } from "./commands/rm.js";
+
 import { attachCommand } from "./commands/attach.js";
+import { initCommand } from "./commands/init.js";
+import { listCommand } from "./commands/list.js";
+import { newCommand } from "./commands/new.js";
+import { rmCommand } from "./commands/rm.js";
 import { handleCompletion } from "./completion.js";
 
 const program = new Command();
@@ -45,7 +47,10 @@ program
   .command("rm")
   .description("Remove a session/worktree by name")
   .argument("<name>", "Name of the session to remove")
-  .option("-f, --force", "Force removal even if session has uncommitted changes")
+  .option(
+    "-f, --force",
+    "Force removal even if session has uncommitted changes"
+  )
   .action(async (name: string, options: { force?: boolean }) => {
     await rmCommand(name, options);
   });
@@ -80,8 +85,10 @@ program
     // When called normally (not for completion), show a helpful message
     // But when called for completion, this won't execute because
     // handleCompletion() will have already handled it and exited
-    console.log('Tab completion is handled automatically by the shell.');
-    console.log('To set up completion, use: tabtab install --name claudectl --completer claudectl');
+    console.log("Tab completion is handled automatically by the shell.");
+    console.log(
+      "To set up completion, use: tabtab install --name claudectl --completer claudectl"
+    );
   });
 
 // Handle tab completion before parsing

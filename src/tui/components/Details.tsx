@@ -1,6 +1,6 @@
-import React from 'react';
-import { Box, Text } from 'ink';
-import { SessionInfo } from '../../core/types/session.js';
+import { Box, Text } from "ink";
+import type React from "react";
+import type { SessionInfo } from "../../core/types/session.js";
 
 interface DetailsProps {
   session: SessionInfo | null;
@@ -8,11 +8,11 @@ interface DetailsProps {
 }
 
 const formatPath = (path: string): string => {
-  const home = process.env.HOME || '';
-  return path.replace(home, '~');
+  const home = process.env.HOME || "";
+  return path.replace(home, "~");
 };
 
-export const Details: React.FC<DetailsProps> = ({ session, projectName }) => {
+export const Details: React.FC<DetailsProps> = ({ session, projectName: _projectName }) => {
   if (!session) {
     return (
       <Box borderStyle="single" borderColor="gray" padding={1} height={6}>
@@ -22,7 +22,13 @@ export const Details: React.FC<DetailsProps> = ({ session, projectName }) => {
   }
 
   return (
-    <Box borderStyle="single" borderColor="gray" padding={1} flexDirection="column" height={6}>
+    <Box
+      borderStyle="single"
+      borderColor="gray"
+      padding={1}
+      flexDirection="column"
+      height={6}
+    >
       <Text color="cyan">Session Details</Text>
       <Text>
         <Text color="gray">Session: </Text>
@@ -30,7 +36,7 @@ export const Details: React.FC<DetailsProps> = ({ session, projectName }) => {
       </Text>
       <Text>
         <Text color="gray">Branch: </Text>
-        <Text color="yellow">{session.branch || 'main'}</Text>
+        <Text color="yellow">{session.branch || "main"}</Text>
       </Text>
       <Text>
         <Text color="gray">Path: </Text>
@@ -39,7 +45,10 @@ export const Details: React.FC<DetailsProps> = ({ session, projectName }) => {
       {session.lastCommit && (
         <Text>
           <Text color="gray">Last commit: </Text>
-          <Text color="white">{session.lastCommit.slice(0, 50)}{session.lastCommit.length > 50 ? '...' : ''}</Text>
+          <Text color="white">
+            {session.lastCommit.slice(0, 50)}
+            {session.lastCommit.length > 50 ? "..." : ""}
+          </Text>
         </Text>
       )}
     </Box>
