@@ -20,7 +20,9 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "setup:local": "npm run build && npm link",
+    "setup:clean": "npm unlink -g claudectl"
   },
   "keywords": [
     "cli",
