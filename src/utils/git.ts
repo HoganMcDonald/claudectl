@@ -1,6 +1,6 @@
+import { execSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { execSync } from "node:child_process";
 import { getGlobalClaudectlDir } from "./directories.js";
 
 /**
@@ -123,10 +123,13 @@ export function getDefaultBranch(repoPath: string = process.cwd()): string {
  * updateBranch(process.cwd(), "main"); // Updates main branch specifically
  * ```
  */
-export function updateBranch(repoPath: string = process.cwd(), branch?: string): void {
+export function updateBranch(
+  repoPath: string = process.cwd(),
+  branch?: string
+): void {
   try {
     const targetBranch = branch || getDefaultBranch(repoPath);
-    
+
     // Fetch latest changes
     execSync("git fetch origin", {
       cwd: repoPath,
@@ -171,7 +174,7 @@ export function createWorktree(
 ): void {
   try {
     const targetBaseBranch = baseBranch || getDefaultBranch(repoPath);
-    
+
     // Ensure we have the latest changes
     execSync("git fetch origin", {
       cwd: repoPath,
@@ -179,10 +182,13 @@ export function createWorktree(
     });
 
     // Create the worktree with a new branch based on the latest base branch
-    execSync(`git worktree add -b ${branchName} ${worktreePath} origin/${targetBaseBranch}`, {
-      cwd: repoPath,
-      stdio: "pipe",
-    });
+    execSync(
+      `git worktree add -b ${branchName} ${worktreePath} origin/${targetBaseBranch}`,
+      {
+        cwd: repoPath,
+        stdio: "pipe",
+      }
+    );
   } catch (error) {
     throw new Error(`Failed to create worktree: ${error}`);
   }
@@ -214,7 +220,9 @@ export interface WorktreeInfo {
  * worktrees.forEach(wt => console.log(`${wt.branch}: ${wt.path} (${wt.isMain ? 'main' : 'worktree'})`));
  * ```
  */
-export function listWorktrees(repoPath: string = process.cwd()): WorktreeInfo[] {
+export function listWorktrees(
+  repoPath: string = process.cwd()
+): WorktreeInfo[] {
   try {
     const result = execSync("git worktree list --porcelain", {
       cwd: repoPath,
@@ -225,19 +233,19 @@ export function listWorktrees(repoPath: string = process.cwd()): WorktreeInfo[] 
     const worktrees: WorktreeInfo[] = [];
     const lines = result.trim().split("\n");
     const currentPath = path.resolve(repoPath);
-    
+
     let currentWorktree: Partial<WorktreeInfo> = {};
-    
+
     for (const line of lines) {
       if (line.startsWith("worktree ")) {
         if (Object.keys(currentWorktree).length > 0) {
           worktrees.push(currentWorktree as WorktreeInfo);
         }
         const worktreePath = line.substring(9);
-        currentWorktree = { 
+        currentWorktree = {
           path: worktreePath,
           isMain: false,
-          isCurrent: path.resolve(worktreePath) === currentPath
+          isCurrent: path.resolve(worktreePath) === currentPath,
         };
       } else if (line.startsWith("HEAD ")) {
         currentWorktree.commit = line.substring(5);
@@ -245,12 +253,14 @@ export function listWorktrees(repoPath: string = process.cwd()): WorktreeInfo[] 
         const branchRef = line.substring(7);
         currentWorktree.branch = branchRef.replace("refs/heads/", "");
         // Mark as main if it's the default branch
-        currentWorktree.isMain = currentWorktree.branch === "main" || currentWorktree.branch === "master";
+        currentWorktree.isMain =
+          currentWorktree.branch === "main" ||
+          currentWorktree.branch === "master";
       } else if (line.startsWith("bare") || line.startsWith("detached")) {
         // Handle special cases - for now we'll skip these
       }
     }
-    
+
     if (Object.keys(currentWorktree).length > 0) {
       worktrees.push(currentWorktree as WorktreeInfo);
     }
@@ -259,11 +269,14 @@ export function listWorktrees(repoPath: string = process.cwd()): WorktreeInfo[] 
     for (const worktree of worktrees) {
       try {
         // Get commit message
-        const commitMsg = execSync(`git log -1 --pretty=format:"%s" ${worktree.commit}`, {
-          cwd: repoPath,
-          encoding: "utf-8",
-          stdio: "pipe",
-        });
+        const commitMsg = execSync(
+          `git log -1 --pretty=format:"%s" ${worktree.commit}`,
+          {
+            cwd: repoPath,
+            encoding: "utf-8",
+            stdio: "pipe",
+          }
+        );
         worktree.commitMessage = commitMsg.trim();
 
         // Check if worktree is clean (only for existing directories)
@@ -306,11 +319,18 @@ export function listWorktrees(repoPath: string = process.cwd()): WorktreeInfo[] 
  * console.log(`Found ${projectWorktrees.length} worktrees for my-project`);
  * ```
  */
-export function getProjectWorktrees(projectName: string, repoPath: string = process.cwd()): WorktreeInfo[] {
+export function getProjectWorktrees(
+  projectName: string,
+  repoPath: string = process.cwd()
+): WorktreeInfo[] {
   const allWorktrees = listWorktrees(repoPath);
-  const projectPath = path.join(getGlobalClaudectlDir(), "projects", projectName);
-  
-  return allWorktrees.filter(worktree => {
+  const projectPath = path.join(
+    getGlobalClaudectlDir(),
+    "projects",
+    projectName
+  );
+
+  return allWorktrees.filter((worktree) => {
     // Include main repository worktree and any worktrees in the project directory
     return worktree.isMain || worktree.path.startsWith(projectPath);
   });
@@ -329,16 +349,23 @@ export function getProjectWorktrees(projectName: string, repoPath: string = proc
  * console.log(name); // "brave-penguin"
  * ```
  */
-export function getWorktreeName(worktreePath: string, projectName: string): string | null {
-  const projectPath = path.join(getGlobalClaudectlDir(), "projects", projectName);
-  
+export function getWorktreeName(
+  worktreePath: string,
+  projectName: string
+): string | null {
+  const projectPath = path.join(
+    getGlobalClaudectlDir(),
+    "projects",
+    projectName
+  );
+
   if (worktreePath.startsWith(projectPath)) {
     const relativePath = path.relative(projectPath, worktreePath);
     // Return the first directory name (the worktree name)
     const parts = relativePath.split(path.sep);
     return parts[0] || null;
   }
-  
+
   return null;
 }
 
@@ -365,15 +392,17 @@ export function findWorktreeByName(
   repoPath: string = process.cwd()
 ): WorktreeInfo | null {
   const projectWorktrees = getProjectWorktrees(projectName, repoPath);
-  
-  return projectWorktrees.find(worktree => {
-    if (worktree.isMain && worktreeName === "main") {
-      return true;
-    }
-    
-    const name = getWorktreeName(worktree.path, projectName);
-    return name === worktreeName;
-  }) || null;
+
+  return (
+    projectWorktrees.find((worktree) => {
+      if (worktree.isMain && worktreeName === "main") {
+        return true;
+      }
+
+      const name = getWorktreeName(worktree.path, projectName);
+      return name === worktreeName;
+    }) || null
+  );
 }
 
 /**
@@ -400,26 +429,32 @@ export function removeWorktreeByName(
 ): WorktreeInfo {
   // Find the worktree
   const worktree = findWorktreeByName(worktreeName, projectName, repoPath);
-  
+
   if (!worktree) {
-    throw new Error(`Worktree "${worktreeName}" not found in project "${projectName}"`);
+    throw new Error(
+      `Worktree "${worktreeName}" not found in project "${projectName}"`
+    );
   }
-  
+
   // Prevent removal of main repository
   if (worktree.isMain) {
-    throw new Error('Cannot remove main repository worktree');
+    throw new Error("Cannot remove main repository worktree");
   }
-  
+
   // Prevent removal of current worktree
   if (worktree.isCurrent) {
-    throw new Error('Cannot remove current worktree. Please switch to another worktree first');
+    throw new Error(
+      "Cannot remove current worktree. Please switch to another worktree first"
+    );
   }
-  
+
   // Check for uncommitted changes unless forced
   if (!force && worktree.isClean === false) {
-    throw new Error(`Worktree "${worktreeName}" has uncommitted changes. Use --force to remove anyway`);
+    throw new Error(
+      `Worktree "${worktreeName}" has uncommitted changes. Use --force to remove anyway`
+    );
   }
-  
+
   // Remove the worktree
   try {
     removeWorktree(worktree.path, repoPath, force);
@@ -458,4 +493,3 @@ export function removeWorktree(
     throw new Error(`Failed to remove worktree: ${error}`);
   }
 }
-

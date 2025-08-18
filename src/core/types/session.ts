@@ -14,8 +14,8 @@ export interface ClaudeSessionInfo {
   useContainer: boolean;
 }
 
-export type ClaudeStatus = 'active' | 'waiting' | 'idle' | 'error';
-export type GitStatus = 'clean' | 'dirty' | 'ahead' | 'behind';
+export type ClaudeStatus = "active" | "waiting" | "idle" | "error";
+export type GitStatus = "clean" | "dirty" | "ahead" | "behind";
 
 export interface SessionInfo extends ClaudeSessionInfo {
   gitStatus: GitStatus;

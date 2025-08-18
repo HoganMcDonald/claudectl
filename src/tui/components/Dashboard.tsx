@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Box, Text, useApp } from 'ink';
-import { SessionProvider, useSession } from '../providers/SessionProvider.js';
-import { SessionList } from './SessionList.js';
-import { ActionBar } from './ActionBar.js';
-import { Details } from './Details.js';
-import { useKeyBindings } from '../hooks/useKeyBindings.js';
+import { Box, Text, useApp } from "ink";
+import type React from "react";
+import { useState } from "react";
+import { useKeyBindings } from "../hooks/useKeyBindings.js";
+import { SessionProvider, useSession } from "../providers/SessionProvider.js";
+import { ActionBar } from "./ActionBar.js";
+import { Details } from "./Details.js";
+import { SessionList } from "./SessionList.js";
 
 interface DashboardProps {
   refreshRate?: number;
@@ -13,34 +14,36 @@ interface DashboardProps {
 const DashboardContent: React.FC = () => {
   const { exit } = useApp();
   const { sessions, selectedIndex, loading } = useSession();
-  const [projectName] = useState('claudectl'); // TODO: Get from config
-  
+  const [projectName] = useState("claudectl"); // TODO: Get from config
+
   const selectedSession = sessions.length > 0 ? sessions[selectedIndex] : null;
 
   useKeyBindings({
     onQuit: () => exit(),
     onNewSession: () => {
       // TODO: Implement new session modal
-      console.log('New session requested');
+      console.log("New session requested");
     },
     onDeleteSession: () => {
       // TODO: Implement delete confirmation modal
-      console.log('Delete session requested');
+      console.log("Delete session requested");
     },
     onAttachSession: () => {
       // TODO: Implement attach prompt modal
-      console.log('Attach session requested');
+      console.log("Attach session requested");
     },
     onRefresh: () => {
-      console.log('Refresh requested');
-    }
+      console.log("Refresh requested");
+    },
   });
 
   return (
     <Box flexDirection="column" width="100%" height="100%">
       {/* Header */}
       <Box justifyContent="space-between" paddingX={1} paddingY={1}>
-        <Text color="cyan" bold>claudectl TUI</Text>
+        <Text color="cyan" bold>
+          claudectl TUI
+        </Text>
         <Text color="gray">[q] quit [?] help</Text>
       </Box>
 
@@ -48,7 +51,9 @@ const DashboardContent: React.FC = () => {
       <Box paddingX={1}>
         <Text>
           <Text color="gray">Sessions for project: </Text>
-          <Text color="white" bold>{projectName}</Text>
+          <Text color="white" bold>
+            {projectName}
+          </Text>
           {loading && <Text color="yellow"> (loading...)</Text>}
         </Text>
       </Box>
@@ -56,9 +61,16 @@ const DashboardContent: React.FC = () => {
       {/* Main Content */}
       <Box flexDirection="column" paddingX={1} paddingY={1} flexGrow={1}>
         {/* Sessions List */}
-        <Box borderStyle="single" borderColor="cyan" padding={1} marginBottom={1}>
+        <Box
+          borderStyle="single"
+          borderColor="cyan"
+          padding={1}
+          marginBottom={1}
+        >
           <Box flexDirection="column" width="100%">
-            <Text color="cyan" bold>Active Sessions</Text>
+            <Text color="cyan" bold>
+              Active Sessions
+            </Text>
             <SessionList sessions={sessions} selectedIndex={selectedIndex} />
           </Box>
         </Box>

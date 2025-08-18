@@ -3,8 +3,8 @@ import { createProjectConfig } from "./config.js";
 import {
   ensureDirectory,
   getGlobalClaudectlDir,
-  getProjectsDir,
   getProjectDir,
+  getProjectsDir,
 } from "./directories.js";
 
 /**
