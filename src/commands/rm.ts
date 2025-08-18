@@ -1,22 +1,25 @@
+import { ClaudeSessionManager } from "../claude-session.js";
 import {
-  findWorktreeByName,
-  removeWorktreeByName,
-  getWorktreeName,
-  type WorktreeInfo,
-} from "../utils.js";
-import {
-  error,
-  info,
-  success,
-  warning,
-  instruction,
-  section,
   blank,
   emphasis,
+  error,
   fatal,
+  info,
+  instruction,
+  section,
+  success,
+  warning,
 } from "../output.js";
-import { ClaudeSessionManager } from "../claude-session.js";
-import { handleProjectValidation, validateSessionName } from "../utils/errors.js";
+import {
+  handleProjectValidation,
+  validateSessionName,
+} from "../utils/errors.js";
+import {
+  findWorktreeByName,
+  getWorktreeName,
+  removeWorktreeByName,
+  type WorktreeInfo,
+} from "../utils.js";
 
 /**
  * Removes a worktree/session by name from the current claudectl project.
@@ -29,12 +32,18 @@ import { handleProjectValidation, validateSessionName } from "../utils/errors.js
  * Removes a worktree/session by name from the current claudectl project.
  * Also stops any associated Claude Code session.
  */
-export const rmCommand = async (sessionName: string, options: { force?: boolean } = {}): Promise<void> => {
+export const rmCommand = async (
+  sessionName: string,
+  options: { force?: boolean } = {}
+): Promise<void> => {
   const currentDir = process.cwd();
 
   // Validate session name is provided
   validateSessionName(sessionName, "rm");
-  const projectConfig = handleProjectValidation(currentDir, `rm ${sessionName}`);
+  const projectConfig = handleProjectValidation(
+    currentDir,
+    `rm ${sessionName}`
+  );
 
   // Find the worktree
   let worktree: WorktreeInfo | null;
@@ -56,14 +65,14 @@ export const rmCommand = async (sessionName: string, options: { force?: boolean 
   section(`Removing session "${sessionName}"`);
   blank();
 
-  const displayPath = getWorktreeName(worktree.path, projectConfig.name) 
+  const displayPath = getWorktreeName(worktree.path, projectConfig.name)
     ? `~/.claudectl/projects/${projectConfig.name}/${sessionName}`
     : worktree.path;
 
   info(`Session: ${sessionName}`);
   info(`Branch: ${worktree.branch}`);
   info(`Path: ${displayPath}`);
-  
+
   if (worktree.commitMessage) {
     info(`Last commit: ${worktree.commitMessage}`);
   }
@@ -76,31 +85,29 @@ export const rmCommand = async (sessionName: string, options: { force?: boolean 
     info("• Uncommitted file changes");
     info("• Untracked files");
     blank();
-    instruction(
-      "To remove anyway, use the --force flag:",
-      [`claudectl rm ${sessionName} --force`]
-    );
+    instruction("To remove anyway, use the --force flag:", [
+      `claudectl rm ${sessionName} --force`,
+    ]);
     process.exit(1);
   }
 
   // Prevent removal of main repository
   if (worktree.isMain) {
-    error('cannot remove main repository');
+    error("cannot remove main repository");
     blank();
-    info("The main repository cannot be removed as it contains the primary codebase");
+    info(
+      "The main repository cannot be removed as it contains the primary codebase"
+    );
     process.exit(1);
   }
 
   // Prevent removal of current worktree
   if (worktree.isCurrent) {
-    error('cannot remove current session');
-    instruction(
-      "Switch to another session first, then remove this one:",
-      [
-        "cd ~/your-project  # switch to main",
-        `claudectl rm ${sessionName}  # then remove`
-      ]
-    );
+    error("cannot remove current session");
+    instruction("Switch to another session first, then remove this one:", [
+      "cd ~/your-project  # switch to main",
+      `claudectl rm ${sessionName}  # then remove`,
+    ]);
     process.exit(1);
   }
 
@@ -126,15 +133,19 @@ export const rmCommand = async (sessionName: string, options: { force?: boolean 
 
   // Remove the worktree
   try {
-    const removedWorktree = removeWorktreeByName(sessionName, projectConfig.name, currentDir, options.force || false);
-    
+    const removedWorktree = removeWorktreeByName(
+      sessionName,
+      projectConfig.name,
+      currentDir,
+      options.force || false
+    );
+
     success(`Session "${sessionName}" removed successfully`);
     info(`Removed directory: ${displayPath}`);
     info(`Removed branch: ${removedWorktree.branch}`);
     if (claudeSession) {
       info(`Stopped Claude Code session`);
     }
-    
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     fatal(`failed to remove session: ${errorMessage}`);

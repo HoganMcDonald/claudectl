@@ -1,23 +1,22 @@
 import * as path from "node:path";
-import {
-  getProjectDir,
-  createWorktree,
-  getDefaultBranch,
-  generateRandomName,
-} from "../utils.js";
-import {
-  error,
-  info,
-  success,
-  indentedSuccess,
-  step,
-  blank,
-  section,
-  fatal,
-} from "../output.js";
 import { ClaudeSessionManager } from "../claude-session.js";
+import {
+  blank,
+  error,
+  fatal,
+  indentedSuccess,
+  info,
+  section,
+  step,
+  success,
+} from "../output.js";
 import { handleProjectValidation } from "../utils/errors.js";
-
+import {
+  createWorktree,
+  generateRandomName,
+  getDefaultBranch,
+  getProjectDir,
+} from "../utils.js";
 
 /**
  * Creates a new worktree for the current claudectl project and starts a Claude Code session.
@@ -28,7 +27,7 @@ export const newCommand = async (worktreeName?: string): Promise<void> => {
 
   // Generate worktree name if not provided
   const resolvedWorktreeName = worktreeName || generateRandomName();
-  
+
   // Get project directory path
   const projectDir = getProjectDir(projectConfig.name);
   const worktreePath = path.join(projectDir, resolvedWorktreeName);
@@ -49,11 +48,18 @@ export const newCommand = async (worktreeName?: string): Promise<void> => {
   try {
     step(1, 2, `Fetching latest ${defaultBranch} from origin`);
     step(2, 2, `Creating worktree with branch ${resolvedWorktreeName}`);
-    
-    createWorktree(worktreePath, resolvedWorktreeName, defaultBranch, currentDir);
-    
+
+    createWorktree(
+      worktreePath,
+      resolvedWorktreeName,
+      defaultBranch,
+      currentDir
+    );
+
     indentedSuccess(`Worktree created at ${worktreePath}`);
-    indentedSuccess(`Branch "${resolvedWorktreeName}" created from origin/${defaultBranch}`);
+    indentedSuccess(
+      `Branch "${resolvedWorktreeName}" created from origin/${defaultBranch}`
+    );
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     fatal(`failed to create worktree: ${errorMessage}`);
@@ -69,7 +75,7 @@ export const newCommand = async (worktreeName?: string): Promise<void> => {
       workingDirectory: worktreePath,
       sessionName: resolvedWorktreeName,
       useContainer: true,
-      dangerouslySkipPermissions: true
+      dangerouslySkipPermissions: true,
     });
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
@@ -82,5 +88,7 @@ export const newCommand = async (worktreeName?: string): Promise<void> => {
   success(`Claude Code session started in background`);
   info(`Switch to the worktree: cd ${worktreePath}`);
   info("The worktree contains a fresh branch based on the latest main/master");
-  info("Claude Code is running with container isolation and dangerously-skip-permissions");
+  info(
+    "Claude Code is running with container isolation and dangerously-skip-permissions"
+  );
 };

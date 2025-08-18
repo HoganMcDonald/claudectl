@@ -1,21 +1,23 @@
 import * as path from "node:path";
 import {
+  type ClaudeSessionInfo,
+  ClaudeSessionManager,
+} from "../claude-session.js";
+import {
+  blank,
+  dim,
+  emphasis,
+  info,
+  section,
+  success,
+  table,
+} from "../output.js";
+import { handleProjectValidation } from "../utils/errors.js";
+import {
   getProjectWorktrees,
   getWorktreeName,
   type WorktreeInfo,
 } from "../utils.js";
-import {
-  info,
-  section,
-  table,
-  blank,
-  success,
-  emphasis,
-  dim,
-} from "../output.js";
-import { ClaudeSessionManager, type ClaudeSessionInfo } from "../claude-session.js";
-import { handleProjectValidation } from "../utils/errors.js";
-
 
 /**
  * Formats a commit hash for display (short version).
@@ -50,7 +52,10 @@ function formatStatus(task: WorktreeInfo, session?: ClaudeSessionInfo): string {
 /**
  * Formats commit message for display (truncated if too long).
  */
-function formatCommitMessage(message: string | undefined, maxLength: number = 50): string {
+function formatCommitMessage(
+  message: string | undefined,
+  maxLength: number = 50
+): string {
   if (!message) {
     return "-";
   }
@@ -91,13 +96,13 @@ export const listCommand = async (): Promise<void> => {
   }
 
   // Filter out the main repository - only show created sessions
-  const tasks = allTasks.filter(task => !task.isMain);
+  const tasks = allTasks.filter((task) => !task.isMain);
 
   // Clean up dead sessions and get active ones
   ClaudeSessionManager.cleanupSessions();
   const sessions = ClaudeSessionManager.listSessions();
   const sessionMap = new Map<string, ClaudeSessionInfo>();
-  
+
   // Map sessions by worktree name
   for (const session of sessions) {
     sessionMap.set(session.sessionName, session);
@@ -116,16 +121,16 @@ export const listCommand = async (): Promise<void> => {
 
   // Prepare table data
   const headers = ["Name", "Branch", "Commit", "Status", "Last Commit"];
-  const rows = tasks.map(task => {
+  const rows = tasks.map((task) => {
     const taskName = getTaskDisplayName(task, projectConfig.name);
     const session = sessionMap.get(taskName);
-    
+
     return [
       taskName,
       task.branch || "-",
       formatCommitHash(task.commit),
       formatStatus(task, session),
-      formatCommitMessage(task.commitMessage)
+      formatCommitMessage(task.commitMessage),
     ];
   });
 
@@ -133,7 +138,7 @@ export const listCommand = async (): Promise<void> => {
   table(headers, rows);
 
   // Show current session info (if in a session)
-  const currentTask = tasks.find(task => task.isCurrent);
+  const currentTask = tasks.find((task) => task.isCurrent);
   if (currentTask) {
     blank();
     const currentName = getTaskDisplayName(currentTask, projectConfig.name);
@@ -143,7 +148,7 @@ export const listCommand = async (): Promise<void> => {
   // Show switch instructions
   blank();
   emphasis("Switch to a session:");
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     if (!task.isCurrent) {
       const displayName = getTaskDisplayName(task, projectConfig.name);
       dim(`  cd ${task.path}  # ${displayName}`);

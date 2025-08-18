@@ -1,20 +1,20 @@
 import * as path from "node:path";
 import {
-  isGitRepository,
+  blank,
+  error,
+  indentedError,
+  indentedSuccess,
+  info,
+  instruction,
+  section,
+  step,
+  success,
+} from "../output.js";
+import {
   hasClaudectlConfig,
+  isGitRepository,
   performMultiStepInit,
 } from "../utils/index.js";
-import {
-  error,
-  info,
-  success,
-  indentedSuccess,
-  indentedError,
-  instruction,
-  step,
-  blank,
-  section,
-} from "../output.js";
 
 export const initCommand = (projectName?: string): void => {
   const currentDir = process.cwd();
