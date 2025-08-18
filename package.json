@@ -2,6 +2,7 @@
   "name": "claudectl",
   "version": "0.1.0",
   "description": "A TypeScript CLI tool for Claude project management",
+  "type": "module",
   "main": "dist/index.js",
   "bin": {
     "claudectl": "dist/cli.js"
@@ -46,7 +47,10 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@types/react": "^19.1.10",
     "commander": "^11.0.0",
+    "ink": "^6.2.0",
+    "react": "^19.1.1",
     "tabtab": "^3.0.2",
     "zod": "^4.0.17"
   },

@@ -1,11 +1,11 @@
-import type { ProjectConfig } from "../types";
-import { createProjectConfig } from "./config";
+import type { ProjectConfig } from "../types.js";
+import { createProjectConfig } from "./config.js";
 import {
   ensureDirectory,
   getGlobalClaudectlDir,
   getProjectsDir,
   getProjectDir,
-} from "./directories";
+} from "./directories.js";
 
 /**
  * Multi-step initialization utilities for ClaudeCtl.

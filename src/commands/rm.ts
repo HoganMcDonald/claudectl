@@ -6,7 +6,7 @@ import {
   removeWorktreeByName,
   getWorktreeName,
   type WorktreeInfo,
-} from "../utils";
+} from "../utils.js";
 import {
   error,
   info,
@@ -17,8 +17,8 @@ import {
   blank,
   emphasis,
   fatal,
-} from "../output";
-import { ClaudeSessionManager } from "../claude-session";
+} from "../output.js";
+import { ClaudeSessionManager } from "../claude-session.js";
 
 /**
  * Removes a worktree/session by name from the current claudectl project.

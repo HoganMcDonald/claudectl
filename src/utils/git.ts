@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { execSync } from "node:child_process";
+import { getGlobalClaudectlDir } from "./directories.js";
 
 /**
  * Git-related utility functions for ClaudeCtl.
@@ -306,7 +307,6 @@ export function listWorktrees(repoPath: string = process.cwd()): WorktreeInfo[] 
  * ```
  */
 export function getProjectWorktrees(projectName: string, repoPath: string = process.cwd()): WorktreeInfo[] {
-  const { getGlobalClaudectlDir } = require("./directories");
   const allWorktrees = listWorktrees(repoPath);
   const projectPath = path.join(getGlobalClaudectlDir(), "projects", projectName);
   
@@ -330,7 +330,6 @@ export function getProjectWorktrees(projectName: string, repoPath: string = proc
  * ```
  */
 export function getWorktreeName(worktreePath: string, projectName: string): string | null {
-  const { getGlobalClaudectlDir } = require("./directories");
   const projectPath = path.join(getGlobalClaudectlDir(), "projects", projectName);
   
   if (worktreePath.startsWith(projectPath)) {

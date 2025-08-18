@@ -3,7 +3,7 @@ import {
   isGitRepository,
   hasClaudectlConfig,
   performMultiStepInit,
-} from "../utils";
+} from "../utils/index.js";
 import {
   error,
   info,
@@ -14,7 +14,7 @@ import {
   step,
   blank,
   section,
-} from "../output";
+} from "../output.js";
 
 export const initCommand = (projectName?: string): void => {
   const currentDir = process.cwd();

@@ -1,11 +1,11 @@
 import { spawn } from "node:child_process";
-import { ClaudeSessionManager } from "../claude-session";
+import { ClaudeSessionManager } from "../claude-session.js";
 import {
   error,
   info,
   success,
   instruction,
-} from "../output";
+} from "../output.js";
 
 /**
  * Attaches to an existing session by starting Claude Code in the session's directory.

@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { type ProjectConfig, ProjectConfigSchema } from "../types";
+import { type ProjectConfig, ProjectConfigSchema } from "../types.js";
 
 /**
  * Project configuration utilities for ClaudeCtl.

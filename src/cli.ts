@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { version } from "../package.json";
-import { initCommand } from "./commands/init";
-import { newCommand } from "./commands/new";
-import { listCommand } from "./commands/list";
-import { rmCommand } from "./commands/rm";
-import { attachCommand } from "./commands/attach";
-import { handleCompletion } from "./completion";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json");
+import { initCommand } from "./commands/init.js";
+import { newCommand } from "./commands/new.js";
+import { listCommand } from "./commands/list.js";
+import { rmCommand } from "./commands/rm.js";
+import { attachCommand } from "./commands/attach.js";
+import { handleCompletion } from "./completion.js";
 
 const program = new Command();
 
@@ -56,6 +58,20 @@ program
     await attachCommand(name);
   });
 
+program
+  .command("tui")
+  .description("Launch interactive TUI interface")
+  .option("--refresh-rate <ms>", "Update interval in milliseconds", "2000")
+  .action(async (options: { refreshRate?: string }) => {
+    try {
+      const { startTUI } = await import("./tui.js");
+      await startTUI(options);
+    } catch (error) {
+      console.error("Failed to start TUI:", error);
+      process.exit(1);
+    }
+  });
+
 // Hidden completion command for tabtab
 program
   .command("completion", { hidden: true })
@@ -69,6 +85,18 @@ program
   });
 
 // Handle tab completion before parsing
-handleCompletion().then(() => {
-  program.parse();
+handleCompletion().then(async () => {
+  // If no command was provided, launch TUI instead of parsing
+  if (process.argv.length <= 2) {
+    try {
+      const { startTUI } = await import("./tui.js");
+      await startTUI({ refreshRate: "2000" });
+    } catch (error) {
+      console.error("Failed to start TUI:", error);
+      console.log("\nAvailable commands:");
+      program.help();
+    }
+  } else {
+    program.parse();
+  }
 });

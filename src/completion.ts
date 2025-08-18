@@ -4,7 +4,7 @@ import {
   loadProjectConfig,
   getProjectWorktrees,
   getWorktreeName,
-} from "./utils";
+} from "./utils.js";
 
 /**
  * Handle tab completion for claudectl commands.
@@ -25,7 +25,7 @@ export async function handleCompletion(): Promise<void> {
   
   // Main commands completion (when typing just "claudectl " or partial command)
   if (wordCount === 1 || (wordCount === 2 && !env.line.endsWith(' '))) {
-    completions = ['init', 'new', 'list', 'rm', 'attach'];
+    completions = ['init', 'new', 'list', 'rm', 'attach', 'tui'];
   }
   // Arguments and options completion
   else if (wordCount >= 2) {
@@ -52,6 +52,7 @@ export async function handleCompletion(): Promise<void> {
       case 'init':
       case 'new':
       case 'list':
+      case 'tui':
       case 'completion':
         // These commands don't have specific completions
         completions = [];

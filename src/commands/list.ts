@@ -6,7 +6,7 @@ import {
   getProjectWorktrees,
   getWorktreeName,
   type WorktreeInfo,
-} from "../utils";
+} from "../utils.js";
 import {
   error,
   info,
@@ -18,8 +18,8 @@ import {
   success,
   emphasis,
   dim,
-} from "../output";
-import { ClaudeSessionManager, type ClaudeSessionInfo } from "../claude-session";
+} from "../output.js";
+import { ClaudeSessionManager, type ClaudeSessionInfo } from "../claude-session.js";
 
 /**
  * Formats a commit hash for display (short version).

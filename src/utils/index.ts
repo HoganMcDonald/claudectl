@@ -19,7 +19,7 @@ export {
   findWorktreeByName,
   removeWorktreeByName,
   type WorktreeInfo,
-} from "./git";
+} from "./git.js";
 
 // Directory management utilities
 export {
@@ -28,14 +28,14 @@ export {
   getProjectDir,
   ensureDirectory,
   hasClaudectlConfig,
-} from "./directories";
+} from "./directories.js";
 
 // Project configuration utilities
 export {
   createProjectConfig,
   loadProjectConfig,
   updateProjectConfig,
-} from "./config";
+} from "./config.js";
 
 // Multi-step initialization utilities
 export {
@@ -43,7 +43,7 @@ export {
   type InitStepResult,
   type InitStepError,
   type InitStepOutcome,
-} from "./initialization";
+} from "./initialization.js";
 
 // Name generation utilities
 export {
@@ -53,4 +53,4 @@ export {
   getTotalCombinations,
   generateNameWithAdjective,
   generateNameWithAnimal,
-} from "./naming";
+} from "./naming.js";

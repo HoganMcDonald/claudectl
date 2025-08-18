@@ -2,7 +2,7 @@ import { spawn, ChildProcess } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { error, info, success, step } from "./output";
+import { error, info, success, step } from "./output.js";
 
 /**
  * Options for starting a Claude Code session

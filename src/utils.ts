@@ -6,4 +6,4 @@
 // - initialization.ts: Multi-step initialization
 // - index.ts: Re-exports all functions
 
-export * from "./utils/index";
+export * from "./utils/index.js";

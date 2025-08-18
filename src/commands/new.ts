@@ -7,7 +7,7 @@ import {
   createWorktree,
   getDefaultBranch,
   generateRandomName,
-} from "../utils";
+} from "../utils.js";
 import {
   error,
   info,
@@ -18,8 +18,8 @@ import {
   blank,
   section,
   fatal,
-} from "../output";
-import { ClaudeSessionManager } from "../claude-session";
+} from "../output.js";
+import { ClaudeSessionManager } from "../claude-session.js";
 
 /**
  * Generates a friendly worktree name using adjective-animal pattern.
