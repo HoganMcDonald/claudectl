@@ -1,7 +1,4 @@
 import {
-  isGitRepository,
-  hasClaudectlConfig,
-  loadProjectConfig,
   findWorktreeByName,
   removeWorktreeByName,
   getWorktreeName,
@@ -19,6 +16,7 @@ import {
   fatal,
 } from "../output.js";
 import { ClaudeSessionManager } from "../claude-session.js";
+import { handleProjectValidation, validateSessionName } from "../utils/errors.js";
 
 /**
  * Removes a worktree/session by name from the current claudectl project.
@@ -27,53 +25,24 @@ import { ClaudeSessionManager } from "../claude-session.js";
  * @param sessionName - Name of the session/worktree to remove.
  * @param options - Command options including force flag.
  */
+/**
+ * Removes a worktree/session by name from the current claudectl project.
+ * Also stops any associated Claude Code session.
+ */
 export const rmCommand = async (sessionName: string, options: { force?: boolean } = {}): Promise<void> => {
   const currentDir = process.cwd();
 
   // Validate session name is provided
-  if (!sessionName || sessionName.trim().length === 0) {
-    error("session name is required");
-    instruction(
-      "Specify the name of the session to remove:",
-      ["claudectl rm brave-penguin", "claudectl rm swift-fox"]
-    );
-    process.exit(1);
-  }
-
-  // Check if current directory is a git repository
-  if (!isGitRepository(currentDir)) {
-    error("current directory is not a git repository");
-    instruction(
-      "ClaudeCtl requires a git repository. Please navigate to one:",
-      ["cd /path/to/your/git/project", `claudectl rm ${sessionName}`]
-    );
-    process.exit(1);
-  }
-
-  // Check if project is initialized
-  if (!hasClaudectlConfig(currentDir)) {
-    error("current directory is not a claudectl project");
-    instruction(
-      "Please initialize a claudectl project first:",
-      ["claudectl init"]
-    );
-    process.exit(1);
-  }
-
-  // Load project configuration
-  let projectConfig: { name: string };
-  try {
-    projectConfig = loadProjectConfig(currentDir);
-  } catch (_err) {
-    fatal("failed to load project configuration");
-  }
+  validateSessionName(sessionName, "rm");
+  const projectConfig = handleProjectValidation(currentDir, `rm ${sessionName}`);
 
   // Find the worktree
   let worktree: WorktreeInfo | null;
   try {
     worktree = findWorktreeByName(sessionName, projectConfig.name, currentDir);
   } catch (err) {
-    fatal(`failed to find session: ${err instanceof Error ? err.message : String(err)}`);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    fatal(`failed to find session: ${errorMessage}`);
   }
 
   if (!worktree) {
@@ -150,7 +119,8 @@ export const rmCommand = async (sessionName: string, options: { force?: boolean 
       info(`Stopping Claude Code session for "${sessionName}"`);
       await ClaudeSessionManager.stopSession(sessionName);
     } catch (err) {
-      warning(`Failed to stop Claude Code session: ${err instanceof Error ? err.message : String(err)}`);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      warning(`Failed to stop Claude Code session: ${errorMessage}`);
     }
   }
 
@@ -166,7 +136,8 @@ export const rmCommand = async (sessionName: string, options: { force?: boolean 
     }
     
   } catch (err) {
-    fatal(`failed to remove session: ${err instanceof Error ? err.message : String(err)}`);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    fatal(`failed to remove session: ${errorMessage}`);
   }
 
   blank();

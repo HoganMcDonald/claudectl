@@ -1,8 +1,5 @@
 import * as path from "node:path";
 import {
-  isGitRepository,
-  hasClaudectlConfig,
-  loadProjectConfig,
   getProjectDir,
   createWorktree,
   getDefaultBranch,
@@ -13,61 +10,24 @@ import {
   info,
   success,
   indentedSuccess,
-  instruction,
   step,
   blank,
   section,
   fatal,
 } from "../output.js";
 import { ClaudeSessionManager } from "../claude-session.js";
+import { handleProjectValidation } from "../utils/errors.js";
 
-/**
- * Generates a friendly worktree name using adjective-animal pattern.
- *
- * @returns A friendly worktree name like "brave-penguin" or "swift-fox".
- */
-function generateWorktreeName(): string {
-  return generateRandomName();
-}
 
 /**
  * Creates a new worktree for the current claudectl project and starts a Claude Code session.
- *
- * @param worktreeName - Optional name for the new worktree. If not provided, generates a unique name.
  */
 export const newCommand = async (worktreeName?: string): Promise<void> => {
   const currentDir = process.cwd();
-
-  // Check if current directory is a git repository
-  if (!isGitRepository(currentDir)) {
-    error("current directory is not a git repository");
-    instruction(
-      "ClaudeCtl requires a git repository. Please initialize one first:",
-      ["git init", "git add .", 'git commit -m "Initial commit"']
-    );
-    process.exit(1);
-  }
-
-  // Check if project is initialized
-  if (!hasClaudectlConfig(currentDir)) {
-    error("current directory is not a claudectl project");
-    instruction(
-      "Please initialize a claudectl project first:",
-      ["claudectl init"]
-    );
-    process.exit(1);
-  }
-
-  // Load project configuration
-  let projectConfig: { name: string };
-  try {
-    projectConfig = loadProjectConfig(currentDir);
-  } catch (_err) {
-    fatal("failed to load project configuration");
-  }
+  const projectConfig = handleProjectValidation(currentDir);
 
   // Generate worktree name if not provided
-  const resolvedWorktreeName = worktreeName || generateWorktreeName();
+  const resolvedWorktreeName = worktreeName || generateRandomName();
   
   // Get project directory path
   const projectDir = getProjectDir(projectConfig.name);
@@ -78,7 +38,8 @@ export const newCommand = async (worktreeName?: string): Promise<void> => {
   try {
     defaultBranch = getDefaultBranch(currentDir);
   } catch (err) {
-    fatal(`failed to determine default branch: ${err instanceof Error ? err.message : String(err)}`);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    fatal(`failed to determine default branch: ${errorMessage}`);
   }
 
   // Create the worktree

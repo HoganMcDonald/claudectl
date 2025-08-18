@@ -6,6 +6,7 @@ import {
   success,
   instruction,
 } from "../output.js";
+import { validateSessionName } from "../utils/errors.js";
 
 /**
  * Attaches to an existing session by starting Claude Code in the session's directory.
@@ -13,16 +14,13 @@ import {
  *
  * @param sessionName - Name of the session to attach to.
  */
+/**
+ * Attaches to an existing session by starting Claude Code in the session's directory.
+ * This is idempotent - it will always result in a foreground Claude session.
+ */
 export const attachCommand = async (sessionName: string): Promise<void> => {
   // Validate session name is provided
-  if (!sessionName || sessionName.trim().length === 0) {
-    error("session name is required");
-    instruction(
-      "Specify the name of the session to attach to:",
-      ["claudectl attach brave-penguin", "claudectl attach feature-auth"]
-    );
-    process.exit(1);
-  }
+  validateSessionName(sessionName, "attach");
 
   // Check if session exists
   const session = ClaudeSessionManager.getSession(sessionName);

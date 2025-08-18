@@ -1,31 +1,24 @@
 import * as path from "node:path";
 import {
-  isGitRepository,
-  hasClaudectlConfig,
-  loadProjectConfig,
   getProjectWorktrees,
   getWorktreeName,
   type WorktreeInfo,
 } from "../utils.js";
 import {
-  error,
   info,
-  instruction,
   section,
   table,
   blank,
-  fatal,
   success,
   emphasis,
   dim,
 } from "../output.js";
 import { ClaudeSessionManager, type ClaudeSessionInfo } from "../claude-session.js";
+import { handleProjectValidation } from "../utils/errors.js";
+
 
 /**
  * Formats a commit hash for display (short version).
- *
- * @param commit - The full commit hash.
- * @returns The short commit hash (first 7 characters).
  */
 function formatCommitHash(commit: string): string {
   return commit.substring(0, 7);
@@ -33,10 +26,6 @@ function formatCommitHash(commit: string): string {
 
 /**
  * Formats the status column for a task.
- *
- * @param task - The task information.
- * @param session - The Claude session information (if exists).
- * @returns Formatted status string.
  */
 function formatStatus(task: WorktreeInfo, session?: ClaudeSessionInfo): string {
   const parts: string[] = [];
@@ -60,10 +49,6 @@ function formatStatus(task: WorktreeInfo, session?: ClaudeSessionInfo): string {
 
 /**
  * Formats commit message for display (truncated if too long).
- *
- * @param message - The commit message.
- * @param maxLength - Maximum length to display (defaults to 50).
- * @returns Formatted commit message.
  */
 function formatCommitMessage(message: string | undefined, maxLength: number = 50): string {
   if (!message) {
@@ -79,10 +64,6 @@ function formatCommitMessage(message: string | undefined, maxLength: number = 50
 
 /**
  * Gets the display name for a task.
- *
- * @param task - The task information.
- * @param projectName - The project name.
- * @returns The display name.
  */
 function getTaskDisplayName(task: WorktreeInfo, projectName: string): string {
   if (task.isMain) {
@@ -98,41 +79,15 @@ function getTaskDisplayName(task: WorktreeInfo, projectName: string): string {
  */
 export const listCommand = async (): Promise<void> => {
   const currentDir = process.cwd();
-
-  // Check if current directory is a git repository
-  if (!isGitRepository(currentDir)) {
-    error("current directory is not a git repository");
-    instruction(
-      "ClaudeCtl requires a git repository. Please navigate to one:",
-      ["cd /path/to/your/git/project", "claudectl list"]
-    );
-    process.exit(1);
-  }
-
-  // Check if project is initialized
-  if (!hasClaudectlConfig(currentDir)) {
-    error("current directory is not a claudectl project");
-    instruction(
-      "Please initialize a claudectl project first:",
-      ["claudectl init"]
-    );
-    process.exit(1);
-  }
-
-  // Load project configuration
-  let projectConfig: { name: string };
-  try {
-    projectConfig = loadProjectConfig(currentDir);
-  } catch (_err) {
-    fatal("failed to load project configuration");
-  }
+  const projectConfig = handleProjectValidation(currentDir);
 
   // Get all tasks for this project (excluding main repository)
   let allTasks: WorktreeInfo[];
   try {
     allTasks = getProjectWorktrees(projectConfig.name, currentDir);
   } catch (err) {
-    fatal(`failed to list tasks: ${err instanceof Error ? err.message : String(err)}`);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    throw new Error(`Failed to list tasks: ${errorMessage}`);
   }
 
   // Filter out the main repository - only show created sessions
