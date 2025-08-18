@@ -1,7 +1,15 @@
 {
   "name": "claudectl",
   "version": "0.1.0",
-  "description": "A TypeScript CLI tool for Claude project management",
+  "description": "A powerful CLI tool for managing multiple parallel development sessions with Claude Code",
+  "homepage": "https://github.com/HoganMcDonald/claudectl#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HoganMcDonald/claudectl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HoganMcDonald/claudectl/issues"
+  },
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -27,9 +35,14 @@
   "keywords": [
     "cli",
     "claude",
+    "claude-code",
+    "git-worktree",
+    "development-workflow",
+    "parallel-development",
+    "session-management",
     "typescript",
-    "project-management",
-    "terminal"
+    "terminal",
+    "tui"
   ],
   "author": "",
   "license": "MIT",
