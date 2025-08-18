@@ -29,8 +29,11 @@
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
+    "test:ci": "npm run typecheck && npm run lint && npm run test:run && npm run build",
     "setup:local": "npm run build && npm link",
-    "setup:clean": "npm unlink -g claudectl"
+    "setup:clean": "npm unlink -g claudectl",
+    "prepare": "npm run build",
+    "prepack": "npm run test:ci"
   },
   "keywords": [
     "cli",
@@ -44,7 +47,7 @@
     "terminal",
     "tui"
   ],
-  "author": "",
+  "author": "Hogan McDonald",
   "license": "MIT",
   "files": [
     "dist/**/*"
