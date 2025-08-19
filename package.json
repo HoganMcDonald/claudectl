@@ -57,7 +57,7 @@
     "@types/node": "^20.0.0",
     "@types/tabtab": "^3.0.4",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/parser": "^8.40.0",
     "@vitest/ui": "^3.2.4",
     "eslint": "^8.0.0",
     "happy-dom": "^18.0.1",
