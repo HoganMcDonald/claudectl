@@ -1,5 +1,7 @@
 # ClaudeCtl
 
+[![CI](https://github.com/HoganMcDonald/claudectl/actions/workflows/ci.yml/badge.svg)](https://github.com/HoganMcDonald/claudectl/actions/workflows/ci.yml)
+
 A powerful CLI tool for managing multiple parallel development sessions with Claude Code. ClaudeCtl creates isolated git worktrees for each feature or task, allowing you to seamlessly switch between different work contexts while maintaining clean, focused development environments.
 
 ## ✨ Features
