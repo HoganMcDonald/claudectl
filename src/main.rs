@@ -1,4 +1,5 @@
 use clap::Parser;
+use crate::utils::output::error;
 
 mod commands;
 mod utils;
@@ -13,9 +14,9 @@ struct Cli {
 
 fn main() {
     let cli = Cli::parse();
-    
+
     if let Err(err) = commands::handle_command(cli.command) {
-        eprintln!("{}", err);
+        error(&err.message);
         std::process::exit(1);
     }
 }

@@ -1,21 +1,17 @@
 use clap::Args;
-use crate::utils::{validate_git_repository, ValidationResult};
-use crate::utils::ICONS;
-use owo_colors::OwoColorize;
+use crate::commands::CommandResult;
+use crate::utils::errors::CommandError;
+use crate::utils::output::blank;
 
 #[derive(Args)]
 pub struct InitCommand {
-    #[arg(short, long, default_value = "")]
-    pub name: String,
 }
 
 impl InitCommand {
-    pub fn execute(&self) -> ValidationResult<()> {
-        validate_git_repository(None)?;
+    pub fn execute(&self) -> CommandResult<()> {
+        blank();
+        println!("Initializing claudectl");
 
-        println!("{} Git repository validation passed!", ICONS.status.success.green().bold());
-        println!("Initializing project: {}", self.name.blue().bold());
-
-        Ok(())
+        Err(CommandError::new("This command is not yet implemented."))
     }
 }
