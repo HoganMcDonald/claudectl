@@ -59,7 +59,7 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitest/ui": "^3.2.4",
-    "eslint": "^8.0.0",
+    "eslint": "^9.33.0",
     "happy-dom": "^18.0.1",
     "typescript": "^5.0.0",
     "vitest": "^3.2.4"
