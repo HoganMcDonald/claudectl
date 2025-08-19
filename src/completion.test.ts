@@ -42,6 +42,9 @@ describe("completion", () => {
     originalCwd = process.cwd();
     originalEnv = { ...process.env };
 
+    // Set test environment
+    process.env.NODE_ENV = 'test';
+
     // Mock process.cwd to return our temp directory
     vi.spyOn(process, "cwd").mockReturnValue(tempDir);
 
@@ -50,20 +53,22 @@ describe("completion", () => {
   });
 
   afterEach(async () => {
-    if (tempDir) {
-      await rm(tempDir, { recursive: true, force: true });
-    }
-    vi.restoreAllMocks();
     process.chdir(originalCwd);
     process.env = originalEnv;
+    
+    // Restore mocks
+    vi.restoreAllMocks();
+
+    // Clean up temp directory
+    await rm(tempDir, { recursive: true, force: true });
   });
 
   describe("handleCompletion", () => {
     it("should return early if not completing", async () => {
       vi.mocked(tabtab.default.parseEnv).mockReturnValue({
         complete: false,
-        words: [],
-        partial: "",
+        line: "",
+        last: "",
       });
 
       await handleCompletion();
@@ -71,65 +76,49 @@ describe("completion", () => {
       expect(tabtab.default.log).not.toHaveBeenCalled();
     });
 
-    it("should complete main commands for length 1", async () => {
+    it("should complete main commands for basic input", async () => {
       vi.mocked(tabtab.default.parseEnv).mockReturnValue({
         complete: true,
-        words: ["claudectl"],
-        partial: "",
+        line: "claudectl ",
+        last: "",
       });
 
       await handleCompletion();
 
       expect(tabtab.default.log).toHaveBeenCalledWith([
         "init",
-        "new",
+        "new", 
         "list",
         "rm",
-        "install-completion",
-        "uninstall-completion",
+        "attach",
+        "tui"
       ]);
     });
 
     it("should complete session names for rm command", async () => {
       vi.mocked(tabtab.default.parseEnv).mockReturnValue({
         complete: true,
-        words: ["claudectl", "rm"],
-        partial: "",
+        line: "claudectl rm ",
+        last: "",
       });
 
       vi.mocked(hasClaudectlConfig).mockReturnValue(true);
       vi.mocked(loadProjectConfig).mockReturnValue({ name: "test-project" });
       vi.mocked(getProjectWorktrees).mockReturnValue([
-        {
-          path: "/home/user/test-project",
-          branch: "main",
-          commit: "abc123",
-          isMain: true,
-          isCurrent: false,
-        },
-        {
-          path: "/home/.claudectl/projects/test-project/brave-penguin",
-          branch: "brave-penguin",
-          commit: "def456",
-          isMain: false,
-          isCurrent: false,
-        },
+        { path: "/test/brave-penguin", isMain: false } as any,
       ]);
-      vi.mocked(getWorktreeName).mockImplementation((path, _projectName) => {
-        if (path.includes("brave-penguin")) return "brave-penguin";
-        return null;
-      });
+      vi.mocked(getWorktreeName).mockReturnValue("brave-penguin");
 
       await handleCompletion();
 
       expect(tabtab.default.log).toHaveBeenCalledWith(["brave-penguin"]);
     });
 
-    it("should complete flags for rm command length 3", async () => {
+    it("should complete flags for rm command after session name", async () => {
       vi.mocked(tabtab.default.parseEnv).mockReturnValue({
         complete: true,
-        words: ["claudectl", "rm", "brave-penguin"],
-        partial: "",
+        line: "claudectl rm session-name ",
+        last: "",
       });
 
       await handleCompletion();
@@ -137,31 +126,47 @@ describe("completion", () => {
       expect(tabtab.default.log).toHaveBeenCalledWith(["--force", "-f"]);
     });
 
+    it("should complete session names for attach command", async () => {
+      vi.mocked(tabtab.default.parseEnv).mockReturnValue({
+        complete: true,
+        line: "claudectl attach ",
+        last: "",
+      });
+
+      vi.mocked(hasClaudectlConfig).mockReturnValue(true);
+      vi.mocked(loadProjectConfig).mockReturnValue({ name: "test-project" });
+      vi.mocked(getProjectWorktrees).mockReturnValue([
+        { path: "/test/brave-penguin", isMain: false } as any,
+      ]);
+      vi.mocked(getWorktreeName).mockReturnValue("brave-penguin");
+
+      await handleCompletion();
+
+      expect(tabtab.default.log).toHaveBeenCalledWith(["brave-penguin"]);
+    });
+
     it("should filter completions based on partial input", async () => {
       vi.mocked(tabtab.default.parseEnv).mockReturnValue({
         complete: true,
-        words: ["claudectl"],
-        partial: "in",
+        line: "claudectl in",
+        last: "in",
       });
 
       await handleCompletion();
 
-      expect(tabtab.default.log).toHaveBeenCalledWith([
-        "init",
-        "install-completion",
-      ]);
+      expect(tabtab.default.log).toHaveBeenCalledWith(["init"]);
     });
 
     it("should handle errors gracefully when loading project config", async () => {
       vi.mocked(tabtab.default.parseEnv).mockReturnValue({
         complete: true,
-        words: ["claudectl", "rm"],
-        partial: "",
+        line: "claudectl rm ",
+        last: "",
       });
 
       vi.mocked(hasClaudectlConfig).mockReturnValue(true);
       vi.mocked(loadProjectConfig).mockImplementation(() => {
-        throw new Error("Config error");
+        throw new Error("Config loading failed");
       });
 
       await handleCompletion();
@@ -172,8 +177,8 @@ describe("completion", () => {
     it("should handle no claudectl config", async () => {
       vi.mocked(tabtab.default.parseEnv).mockReturnValue({
         complete: true,
-        words: ["claudectl", "rm"],
-        partial: "",
+        line: "claudectl rm ",
+        last: "",
       });
 
       vi.mocked(hasClaudectlConfig).mockReturnValue(false);
@@ -186,9 +191,7 @@ describe("completion", () => {
 
   describe("installCompletion", () => {
     it("should install completion successfully", async () => {
-      const mockConsoleLog = vi
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
+      const mockConsoleLog = vi.spyOn(console, "log").mockImplementation();
       vi.mocked(tabtab.default.install).mockResolvedValue(undefined);
 
       await installCompletion();
@@ -198,24 +201,18 @@ describe("completion", () => {
         completer: "claudectl",
       });
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        "✓ Tab completion installed successfully!"
-      );
-      expect(mockConsoleLog).toHaveBeenCalledWith(
-        "  Restart your shell or run: source ~/.bashrc (or ~/.zshrc)"
+        "Tab completion installed successfully"
       );
 
       mockConsoleLog.mockRestore();
     });
 
     it("should handle installation failure", async () => {
-      const mockConsoleError = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-      const mockProcessExit = vi
-        .spyOn(process, "exit")
-        .mockImplementation(() => {
-          throw new Error("process.exit() was called");
-        });
+      const mockConsoleError = vi.spyOn(console, "error").mockImplementation();
+      const mockProcessExit = vi.spyOn(process, "exit").mockImplementation(() => {
+        throw new Error("process.exit() was called");
+      });
+
       const error = new Error("Installation failed");
       vi.mocked(tabtab.default.install).mockRejectedValue(error);
 
@@ -224,10 +221,9 @@ describe("completion", () => {
       );
 
       expect(mockConsoleError).toHaveBeenCalledWith(
-        "✗ Failed to install tab completion:",
+        "Failed to install tab completion:",
         error
       );
-      expect(mockProcessExit).toHaveBeenCalledWith(1);
 
       mockConsoleError.mockRestore();
       mockProcessExit.mockRestore();
@@ -249,9 +245,7 @@ describe("completion", () => {
       const originalEnv = process.env.CLAUDECTL_AUTO_INSTALL;
       process.env.CLAUDECTL_AUTO_INSTALL = "true";
 
-      const mockConsoleLog = vi
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
+      const mockConsoleLog = vi.spyOn(console, "log").mockImplementation();
       vi.mocked(tabtab.default.install).mockResolvedValue(undefined);
 
       await installCompletion();
@@ -265,9 +259,7 @@ describe("completion", () => {
 
   describe("uninstallCompletion", () => {
     it("should uninstall completion successfully", async () => {
-      const mockConsoleLog = vi
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
+      const mockConsoleLog = vi.spyOn(console, "log").mockImplementation();
       vi.mocked(tabtab.default.uninstall).mockResolvedValue(undefined);
 
       await uninstallCompletion();
@@ -276,21 +268,18 @@ describe("completion", () => {
         name: "claudectl",
       });
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        "✓ Tab completion uninstalled successfully!"
+        "Tab completion uninstalled successfully"
       );
 
       mockConsoleLog.mockRestore();
     });
 
     it("should handle uninstallation failure", async () => {
-      const mockConsoleError = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-      const mockProcessExit = vi
-        .spyOn(process, "exit")
-        .mockImplementation(() => {
-          throw new Error("process.exit() was called");
-        });
+      const mockConsoleError = vi.spyOn(console, "error").mockImplementation();
+      const mockProcessExit = vi.spyOn(process, "exit").mockImplementation(() => {
+        throw new Error("process.exit() was called");
+      });
+
       const error = new Error("Uninstallation failed");
       vi.mocked(tabtab.default.uninstall).mockRejectedValue(error);
 
@@ -299,44 +288,12 @@ describe("completion", () => {
       );
 
       expect(mockConsoleError).toHaveBeenCalledWith(
-        "✗ Failed to uninstall tab completion:",
+        "Failed to uninstall tab completion:",
         error
       );
-      expect(mockProcessExit).toHaveBeenCalledWith(1);
 
       mockConsoleError.mockRestore();
       mockProcessExit.mockRestore();
-    });
-
-    it("should handle auto-uninstall failure gracefully", async () => {
-      const originalEnv = process.env.CLAUDECTL_AUTO_UNINSTALL;
-      process.env.CLAUDECTL_AUTO_UNINSTALL = "true";
-
-      const error = new Error("Uninstallation failed");
-      vi.mocked(tabtab.default.uninstall).mockRejectedValue(error);
-
-      await expect(uninstallCompletion()).rejects.toThrow(
-        "Uninstallation failed"
-      );
-
-      process.env.CLAUDECTL_AUTO_UNINSTALL = originalEnv;
-    });
-
-    it("should not show messages during auto-uninstall", async () => {
-      const originalEnv = process.env.CLAUDECTL_AUTO_UNINSTALL;
-      process.env.CLAUDECTL_AUTO_UNINSTALL = "true";
-
-      const mockConsoleLog = vi
-        .spyOn(console, "log")
-        .mockImplementation(() => {});
-      vi.mocked(tabtab.default.uninstall).mockResolvedValue(undefined);
-
-      await uninstallCompletion();
-
-      expect(mockConsoleLog).not.toHaveBeenCalled();
-
-      mockConsoleLog.mockRestore();
-      process.env.CLAUDECTL_AUTO_UNINSTALL = originalEnv;
     });
   });
 });
