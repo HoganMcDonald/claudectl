@@ -1,11 +1,9 @@
-pub type ValidationResult<T> = Result<T, ValidationError>;
-
 #[derive(Debug)]
-pub struct ValidationError {
+pub struct CommandError {
     pub message: String,
 }
 
-impl ValidationError {
+impl CommandError {
     pub fn new(message: &str) -> Self {
         Self {
             message: message.to_string(),

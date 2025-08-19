@@ -1,15 +1,21 @@
 pub mod init;
 
+use crate::utils::errors::*;
 use clap::Subcommand;
-use crate::utils::ValidationResult;
 
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Initialize the project for claudectl
     Init(init::InitCommand),
 }
 
-pub fn handle_command(command: Commands) -> ValidationResult<()> {
+pub fn handle_command(command: Commands) -> CommandResult<()> {
     match command {
-        Commands::Init(cmd) => cmd.execute(),
+        Commands::Init(cmd) => {
+            cmd.execute()?;
+            Ok(())
+        }
     }
 }
+
+pub type CommandResult<T> = Result<T, CommandError>;
