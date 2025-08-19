@@ -109,13 +109,20 @@ export async function installCompletion(): Promise<void> {
     
     if (!process.env.CLAUDECTL_AUTO_INSTALL) {
       console.log('Tab completion installed successfully');
+      console.log('Restart your shell or source your shell config to enable completion');
     }
   } catch (error) {
     if (process.env.CLAUDECTL_AUTO_INSTALL) {
-      throw new Error('Installation failed');
+      // Don't fail silently during auto-install, just skip
+      return;
     }
     
-    console.error('Failed to install tab completion:', error);
+    console.error('Failed to install tab completion');
+    console.error('This is usually due to:');
+    console.error('  - Insufficient permissions to modify shell configuration');
+    console.error('  - Shell configuration file not found');
+    console.error('  - User cancellation during installation');
+    console.error('\nYou can try again with: claudectl install-completion');
     process.exit(1);
   }
 }

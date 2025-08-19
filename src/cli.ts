@@ -11,7 +11,7 @@ import { initCommand } from "./commands/init.js";
 import { listCommand } from "./commands/list.js";
 import { newCommand } from "./commands/new.js";
 import { rmCommand } from "./commands/rm.js";
-import { handleCompletion } from "./completion.js";
+import { handleCompletion, installCompletion, uninstallCompletion } from "./completion.js";
 
 const program = new Command();
 
@@ -77,6 +77,20 @@ program
     }
   });
 
+program
+  .command("install-completion")
+  .description("Install shell tab completion")
+  .action(async () => {
+    await installCompletion();
+  });
+
+program
+  .command("uninstall-completion")
+  .description("Uninstall shell tab completion")
+  .action(async () => {
+    await uninstallCompletion();
+  });
+
 // Hidden completion command for tabtab
 program
   .command("completion", { hidden: true })
@@ -86,9 +100,7 @@ program
     // But when called for completion, this won't execute because
     // handleCompletion() will have already handled it and exited
     console.log("Tab completion is handled automatically by the shell.");
-    console.log(
-      "To set up completion, use: tabtab install --name claudectl --completer claudectl"
-    );
+    console.log("Run 'claudectl install-completion' to set up tab completion manually.");
   });
 
 // Handle tab completion before parsing

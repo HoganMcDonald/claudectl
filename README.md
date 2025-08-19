@@ -21,6 +21,27 @@ A powerful CLI tool for managing multiple parallel development sessions with Cla
 npm install -g claudectl
 ```
 
+### Enable Tab Completion (Optional)
+
+After installation, you can enable shell tab completion:
+
+```bash
+claudectl install-completion
+```
+
+This will prompt you to choose your shell (bash/zsh/fish) and install completion support. After installation, restart your shell or run:
+
+```bash
+# For bash
+source ~/.bashrc
+
+# For zsh  
+source ~/.zshrc
+
+# For fish
+source ~/.config/fish/config.fish
+```
+
 ### Initialize a Project
 
 ```bash
