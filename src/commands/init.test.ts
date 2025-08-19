@@ -44,7 +44,7 @@ describe("init command", () => {
     vi.spyOn(process, "cwd").mockReturnValue(tempDir);
 
     // Mock process.exit to throw instead of exiting
-    mockProcessExit = vi.spyOn(process, "exit").mockImplementation(() => {
+    _mockProcessExit = vi.spyOn(process, "exit").mockImplementation(() => {
       throw new Error("process.exit() was called");
     });
 
