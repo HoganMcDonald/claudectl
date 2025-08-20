@@ -85,7 +85,7 @@ pub struct Icons {
 
 // Spinner frame arrays (exported)
 pub const SPINNER_UNICODE: [&str; 4] = ["◐", "◓", "◑", "◒"];
-pub const SPINNER_BRAILLE: [&str; 8] = ["⠁", "⠂", "⠄", "⡀", "⢀", "⠈", "⠐", "⠠"];
+pub const SPINNER_BRAILLE: [&str; 8] = ["⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"];
 pub const SPINNER_CIRCLES: [&str; 5] = ["○", "◔", "◑", "◕", "●"];
 
 // One global, reusable collection
