@@ -20,3 +20,14 @@ pub fn info(message: &str) {
     let muted = Rgb(150, 150, 150);
     eprintln!("{} {}", ICONS.status.info.color(blue).bold() , message.color(muted));
 }
+
+pub fn step(message: &str, last: bool) {
+    let blue = Rgb(70, 130, 255);  // Vibrant blue
+    let muted = Rgb(150, 150, 150);
+    let icon = if last {
+        ICONS.box_draw.corner_bl
+    } else {
+        ICONS.box_draw.tee_left
+    };
+    println!("{} {}", icon.color(blue).bold(), message.color(muted));
+}
