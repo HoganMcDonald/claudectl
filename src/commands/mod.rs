@@ -1,6 +1,6 @@
 pub mod init;
 
-use crate::utils::errors::*;
+use crate::utils::errors::CommandError;
 use clap::Subcommand;
 
 #[derive(Subcommand)]
@@ -11,10 +11,7 @@ pub enum Commands {
 
 pub fn handle_command(command: Commands) -> CommandResult<()> {
     match command {
-        Commands::Init(cmd) => {
-            cmd.execute()?;
-            Ok(())
-        }
+        Commands::Init(cmd) => cmd.execute(),
     }
 }
 
