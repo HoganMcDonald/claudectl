@@ -38,7 +38,6 @@ impl InitCommand {
 
         // 2. create config structure
         step("Creating Configuration Structure...", Position::Normal);
-        step_end();
         blank();
 
         Ok(())
