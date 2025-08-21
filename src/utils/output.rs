@@ -27,13 +27,23 @@ pub enum Position {
     Last,
 }
 
-pub fn step(message: &str, last: Position) {
+pub fn step(message: &str, position: Position) {
     let blue = Rgb(70, 130, 255); // Vibrant blue
     let muted = Rgb(150, 150, 150);
-    let icon = match last {
+    let icon = match position {
         Position::First => ICONS.box_draw.corner_tl,
         Position::Normal => ICONS.box_draw.tee_left,
         Position::Last => ICONS.box_draw.corner_bl,
     };
-    println!("{} {}", icon.color(blue).bold(), message.color(muted));
+    print!("{} {}", icon.color(blue).bold(), message.color(muted));
+}
+
+pub fn step_end() {
+    let green = Rgb(130, 255, 70); // Vibrant green
+    print!("{} ", ICONS.status.success.color(green).bold());
+}
+
+pub fn step_fail() {
+    let red = Rgb(255, 50, 50); // Vibrant red
+    print!("{} ", ICONS.status.success.color(red).bold());
 }
