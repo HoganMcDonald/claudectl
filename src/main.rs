@@ -1,5 +1,5 @@
 use clap::Parser;
-use crate::utils::output::error;
+use crate::utils::output::{blank, error};
 
 mod commands;
 mod utils;
@@ -16,6 +16,7 @@ fn main() {
     let cli = Cli::parse();
 
     if let Err(err) = commands::handle_command(cli.command) {
+        blank();
         error(&err.message);
         std::process::exit(1);
     }
