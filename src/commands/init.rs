@@ -2,7 +2,7 @@ use crate::commands::CommandResult;
 use crate::utils::claude::is_claude_installed;
 use crate::utils::errors::CommandError;
 use crate::utils::git::is_git_repository;
-use crate::utils::output::{Position, blank, standard, step};
+use crate::utils::output::{Position, blank, standard, step, step_end, step_fail};
 use clap::Args;
 
 #[derive(Args)]
@@ -27,8 +27,19 @@ impl InitCommand {
 
         // 1. verrify that dependencies are met
         step("Verifying Dependencies...", Position::First);
-        is_git_repository()?;
-        is_claude_installed()?;
+        is_git_repository().inspect_err(|_| {
+            step_fail();
+        })?;
+        is_claude_installed().inspect_err(|_| {
+            step_fail();
+        })?;
+        step_end();
+        blank();
+
+        // 2. create config structure
+        step("Creating Configuration Structure...", Position::Normal);
+        step_end();
+        blank();
 
         Ok(())
     }
