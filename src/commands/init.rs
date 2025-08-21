@@ -1,12 +1,12 @@
-use clap::Args;
 use crate::commands::CommandResult;
+use crate::utils::claude::is_claude_installed;
 use crate::utils::errors::CommandError;
-use crate::utils::output::{blank, standard, step, Position};
 use crate::utils::git::is_git_repository;
+use crate::utils::output::{blank, standard, step, Position};
+use clap::Args;
 
 #[derive(Args)]
-pub struct InitCommand {
-}
+pub struct InitCommand {}
 
 impl InitCommand {
     pub fn execute(&self) -> CommandResult<()> {
@@ -16,7 +16,9 @@ impl InitCommand {
         let project_name = current_dir
             .file_name()
             .and_then(|name| name.to_str())
-            .ok_or_else(|| CommandError::new("Failed to get project name from current directory."))?;
+            .ok_or_else(|| {
+                CommandError::new("Failed to get project name from current directory.")
+            })?;
 
         let initialization_message = format!(
             "Initializing project '{}' for use with claudectl...",
@@ -25,11 +27,10 @@ impl InitCommand {
         standard(&initialization_message);
         blank();
 
-        // 1. verrify that current directory is a git repository, claude is installed
+        // 1. verrify that dependencies are met
         step("Verifying Dependencies...", Position::First);
-        is_git_repository()
-            .map_err(|e| e.into())?;
-
+        is_git_repository().map_err(|e| e.into())?;
+        is_claude_installed().map_err(|e| e.into())?;
 
         Ok(())
     }
