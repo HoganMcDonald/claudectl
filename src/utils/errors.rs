@@ -31,7 +31,7 @@ impl GitError {
     pub fn new(message: &str, action: GitAction) -> Self {
         Self {
             message: message.to_string(),
-            action: action,
+            action,
         }
     }
 
@@ -40,9 +40,9 @@ impl GitError {
     }
 }
 
-impl Into<CommandError> for GitError {
-    fn into(self) -> CommandError {
-        CommandError::new(&self.description())
+impl From<GitError> for CommandError {
+    fn from(val: GitError) -> Self {
+        CommandError::new(&val.description())
     }
 }
 
@@ -67,8 +67,8 @@ impl ClaudeError {
     }
 }
 
-impl Into<CommandError> for ClaudeError {
-    fn into(self) -> CommandError {
-        CommandError::new(&self.description())
+impl From<ClaudeError> for CommandError {
+    fn from(val: ClaudeError) -> Self {
+        CommandError::new(&val.description())
     }
 }
