@@ -15,7 +15,6 @@ impl CommandError {
 // GitError:
 //      Custom error type for Git-related operations
 // =================================================
-
 #[derive(Debug)]
 pub enum GitAction {
     /// Not a Git repository
@@ -42,6 +41,33 @@ impl GitError {
 }
 
 impl Into<CommandError> for GitError {
+    fn into(self) -> CommandError {
+        CommandError::new(&self.description())
+    }
+}
+
+// =================================================
+// ClaudeError:
+//      Custom error type for Claude-related operations
+// =================================================
+#[derive(Debug)]
+pub struct ClaudeError {
+    pub message: String,
+}
+
+impl ClaudeError {
+    pub fn new(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+        }
+    }
+
+    fn description(&self) -> String {
+        format!("[Claude Error] {}", self.message)
+    }
+}
+
+impl Into<CommandError> for ClaudeError {
     fn into(self) -> CommandError {
         CommandError::new(&self.description())
     }
