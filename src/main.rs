@@ -1,12 +1,14 @@
-use clap::Parser;
 use crate::utils::output::{blank, error};
+use clap::Parser;
 
 mod commands;
 mod utils;
 
 #[derive(Parser)]
 #[command(name = "claudectl")]
-#[command(about = "A CLI tool for orchestrating Claude Code agents through the use of git worktrees.")]
+#[command(
+    about = "A CLI tool for orchestrating Claude Code agents through the use of git worktrees."
+)]
 struct Cli {
     #[command(subcommand)]
     command: commands::Commands,

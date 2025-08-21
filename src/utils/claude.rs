@@ -4,7 +4,7 @@ pub fn is_claude_installed() -> Result<bool, ClaudeError> {
     let output = std::process::Command::new("which")
         .arg("claude")
         .output()
-        .map_err(|e| ClaudeError::new(&format!("Failed to execute 'which claude': {}", e)))?;
+        .map_err(|e| ClaudeError::new(&format!("Failed to execute 'which claude': {e}")))?;
 
     if output.status.success() {
         Ok(true)

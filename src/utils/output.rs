@@ -11,24 +11,24 @@ pub fn standard(message: &str) {
 }
 
 pub fn error(message: &str) {
-    let red = Rgb(255, 50, 50);  // Vibrant red
-    eprintln!("{} {}", ICONS.status.failure.color(red).bold(), message.color(red));
-}
-
-pub fn info(message: &str) {
-    let blue = Rgb(70, 130, 255);  // Vibrant blue
-    let muted = Rgb(150, 150, 150);
-    eprintln!("{} {}", ICONS.status.info.color(blue).bold() , message.color(muted));
+    let red = Rgb(255, 50, 50); // Vibrant red
+    eprintln!(
+        "{} {}",
+        ICONS.status.failure.color(red).bold(),
+        message.color(red)
+    );
 }
 
 pub enum Position {
     First,
+    #[allow(dead_code)]
     Normal,
-    Last
+    #[allow(dead_code)]
+    Last,
 }
 
 pub fn step(message: &str, last: Position) {
-    let blue = Rgb(70, 130, 255);  // Vibrant blue
+    let blue = Rgb(70, 130, 255); // Vibrant blue
     let muted = Rgb(150, 150, 150);
     let icon = match last {
         Position::First => ICONS.box_draw.corner_tl,
