@@ -1,6 +1,10 @@
 use crate::commands::CommandResult;
 use crate::utils::claude::is_claude_installed;
+use crate::utils::config::Config;
 use crate::utils::errors::CommandError;
+use crate::utils::fs::{
+    create_global_configuration_dir, create_local_configuration_dir, write_local_config_file,
+};
 use crate::utils::git::is_git_repository;
 use crate::utils::output::{Position, blank, standard, step, step_end, step_fail};
 use clap::Args;
@@ -38,6 +42,20 @@ impl InitCommand {
 
         // 2. create config structure
         step("Creating Configuration Structure...", Position::Normal);
+        let project_dir = create_global_configuration_dir(project_name).inspect_err(|_| {
+            step_fail();
+        })?;
+        create_local_configuration_dir().inspect_err(|_| {
+            step_fail();
+        })?;
+        let config = Config::new(project_name, &project_dir);
+        let config_json = config.to_string().inspect_err(|_| {
+            step_fail();
+        })?;
+        write_local_config_file(config_json).inspect_err(|_| {
+            step_fail();
+        })?;
+        step_end();
         blank();
 
         Ok(())

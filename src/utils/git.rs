@@ -24,7 +24,7 @@ mod tests {
 
         // Change to temp directory and create .git
         std::env::set_current_dir(&temp_dir).unwrap();
-        fs::create_dir(".git").unwrap();
+        fs::create_dir_all(".git").unwrap();
 
         let result = is_git_repository();
 

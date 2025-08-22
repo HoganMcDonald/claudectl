@@ -72,3 +72,62 @@ impl From<ClaudeError> for CommandError {
         CommandError::new(&val.description())
     }
 }
+
+// =================================================
+// FileSystemError:
+//      Custom error type for file system operations
+// =================================================
+#[derive(Debug)]
+pub struct FileSystemError {
+    pub message: String,
+    pub path: String,
+}
+
+impl FileSystemError {
+    pub fn new(message: &str, path: &str) -> Self {
+        Self {
+            message: message.to_string(),
+            path: path.to_string(),
+        }
+    }
+
+    fn description(&self) -> String {
+        format!(
+            "[File System Error] {}.\n  Path: {}",
+            self.message, self.path
+        )
+    }
+}
+
+impl From<FileSystemError> for CommandError {
+    fn from(val: FileSystemError) -> Self {
+        CommandError::new(&val.description())
+    }
+}
+
+// =================================================
+// ConfigError:
+//      Custom error type for claudectl config
+// =================================================
+#[derive(Debug)]
+pub struct ConfigError {
+    pub message: String,
+}
+
+impl ConfigError {
+    pub fn new(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+        }
+    }
+
+    fn description(&self) -> String {
+        format!("[Config Error] {}", self.message)
+    }
+}
+
+impl From<ConfigError> for CommandError {
+    fn from(val: ConfigError) -> Self {
+        CommandError::new(&val.description())
+    }
+}
