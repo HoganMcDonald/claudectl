@@ -39,7 +39,7 @@ pub fn create_global_configuration_dir(project_name: &str) -> FileSystemResult<S
         }
         global_project_dir = global_projects_dir.join(format!("{project_name}{n}"));
     }
-    std::fs::create_dir(&global_project_dir).map_err(|e| {
+    std::fs::create_dir_all(&global_project_dir).map_err(|e| {
         FileSystemError::new(
             &format!("Failed to create global project directory ({e})"),
             &global_project_dir.to_string_lossy(),
@@ -61,7 +61,6 @@ pub fn create_local_configuration_dir() -> FileSystemResult<()> {
     Ok(())
 }
 
-#[allow(dead_code)]
 pub fn read_local_config_file() -> FileSystemResult<String> {
     let local_config_dir = current_dir()?.join(".claudectl");
     let config_file_path = local_config_dir.join("config.json");
