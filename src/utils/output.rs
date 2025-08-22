@@ -10,6 +10,16 @@ pub fn standard(message: &str) {
     println!("{}", message.color(white));
 }
 
+pub fn success(message: &str) {
+    let green = Rgb(130, 255, 70); // Vibrant green
+    let white = Rgb(240, 240, 240);
+    println!(
+        "{} {}",
+        ICONS.status.success.color(green).bold(),
+        message.color(white)
+    );
+}
+
 pub fn error(message: &str) {
     let red = Rgb(255, 50, 50); // Vibrant red
     eprintln!(
@@ -41,6 +51,11 @@ pub fn step(message: &str, position: Position) {
 pub fn step_end() {
     let green = Rgb(130, 255, 70); // Vibrant green
     print!("{} ", ICONS.status.success.color(green).bold());
+}
+
+pub fn step_skip() {
+    let blue = Rgb(70, 130, 255); // Vibrant blue
+    print!("{} ", ICONS.arrows.right.color(blue).bold());
 }
 
 pub fn step_fail() {
