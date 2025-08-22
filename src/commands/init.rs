@@ -7,7 +7,9 @@ use crate::utils::fs::{
     write_local_config_file,
 };
 use crate::utils::git::is_git_repository;
-use crate::utils::output::{Position, blank, standard, step, step_end, step_fail};
+use crate::utils::output::{
+    Position, blank, standard, step, step_end, step_fail, step_skip, success,
+};
 use clap::Args;
 
 #[derive(Args)]
@@ -31,7 +33,7 @@ impl InitCommand {
         blank();
 
         // 1. verrify that dependencies are met
-        step("Verifying Dependencies...", Position::First);
+        step("Verifying dependencies...", Position::First);
         is_git_repository().inspect_err(|_| {
             step_fail();
         })?;
@@ -41,13 +43,18 @@ impl InitCommand {
         step_end();
         blank();
 
-        // 2. load or create config structure
-        step("Creating Configuration Structure...", Position::Normal);
+        // 2. create config file
+        step("Generating project config...", Position::Normal);
 
         let config = match read_local_config_file() {
-            Ok(config_content) => Config::from_str(&config_content).inspect_err(|_| {
-                step_fail();
-            })?,
+            Ok(config_content) => {
+                let config = Config::from_str(&config_content).inspect_err(|_| {
+                    step_fail();
+                })?;
+                step_skip();
+                blank();
+                config
+            }
             Err(_) => {
                 let project_dir =
                     create_global_configuration_dir(project_name).inspect_err(|_| {
@@ -63,16 +70,23 @@ impl InitCommand {
                 write_local_config_file(config_json).inspect_err(|_| {
                     step_fail();
                 })?;
+                step_end();
+                blank();
                 config
             }
         };
 
+        // 3. load or create project directories
+        step("Generating project directories...", Position::Last);
+
         create_global_configuration_dir(&config.project_name).inspect_err(|_| {
             step_fail();
         })?;
-
         step_end();
         blank();
+
+        blank();
+        success(format!("Project {} initialized successfully!", config.project_name).as_str());
 
         Ok(())
     }

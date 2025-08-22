@@ -66,5 +66,5 @@ fn test_init_shows_help_message() {
     // Check that initialization message is shown
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("Initializing project"));
-    assert!(stdout.contains("Verifying Dependencies"));
+    assert!(stdout.contains("Verifying dependencies"));
 }
