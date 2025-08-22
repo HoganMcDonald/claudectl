@@ -17,7 +17,6 @@ impl Config {
         }
     }
 
-    #[allow(dead_code)]
     pub fn from_str(json_str: &str) -> ConfigResult<Self> {
         serde_json::from_str(json_str)
             .map_err(|e| ConfigError::new(&format!("Failed to parse configuration JSON: {e}")))
