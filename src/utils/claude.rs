@@ -32,8 +32,8 @@ mod tests {
         if let Err(error) = result {
             // If it fails, verify it's the expected error
             assert_eq!(
-                error.message,
-                "Claude is not installed or not found in PATH."
+                error.to_string(),
+                "Claude is not installed: Claude is not installed or not found in PATH."
             );
         }
     }

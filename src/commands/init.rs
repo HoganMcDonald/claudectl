@@ -34,9 +34,15 @@ impl InitCommand {
 
         // 1. verrify that dependencies are met
         step("Verifying dependencies...", Position::First);
-        is_git_repository().inspect_err(|_| {
+        let is_git_repo = is_git_repository().inspect_err(|_| {
             step_fail();
         })?;
+        if !is_git_repo {
+            step_fail();
+            return Err(CommandError::new(
+                "Current directory is not a git repository",
+            ));
+        }
         is_claude_installed().inspect_err(|_| {
             step_fail();
         })?;
