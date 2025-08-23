@@ -23,9 +23,8 @@ impl Config {
     }
 
     pub fn to_string(&self) -> ConfigResult<String> {
-        serde_json::to_string_pretty(self).map_err(|e| {
-            ConfigError::new(&format!("Failed to serialize configuration to JSON: {e}"))
-        })
+        serde_json::to_string_pretty(self)
+            .map_err(|e| ConfigError::serialize_failed(&format!("JSON serialization error: {e}")))
     }
 }
 
@@ -53,8 +52,8 @@ mod tests {
         assert!(
             result
                 .unwrap_err()
-                .message
-                .contains("Failed to parse configuration JSON")
+                .to_string()
+                .contains("Failed to parse configuration")
         );
     }
 

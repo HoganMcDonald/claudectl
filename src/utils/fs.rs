@@ -1,3 +1,4 @@
+use directories::ProjectDirs;
 use std::path::PathBuf;
 
 use crate::utils::errors::FileSystemError;
@@ -9,21 +10,25 @@ fn current_dir() -> FileSystemResult<PathBuf> {
         .map_err(|_| FileSystemError::new("Failed to get current directory", "./"))
 }
 
-fn home_dir() -> FileSystemResult<PathBuf> {
-    std::env::var("HOME")
-        .map(PathBuf::from)
-        .map_err(|_| FileSystemError::new("Failed to get home directory", "~/"))
+fn config_dir() -> FileSystemResult<PathBuf> {
+    ProjectDirs::from("com", "claudectl", "claudectl")
+        .ok_or_else(|| {
+            FileSystemError::new(
+                "Unable to determine config directory",
+                "~/.config/claudectl",
+            )
+        })
+        .map(|dirs| dirs.config_dir().to_path_buf())
 }
 
 pub fn create_global_configuration_dir(project_name: &str) -> FileSystemResult<String> {
-    let config_dir = home_dir()?.join(".config");
-    let claudectl_config = config_dir.join("claudectl");
+    let claudectl_config = config_dir()?;
     let global_projects_dir = claudectl_config.join("projects");
 
     std::fs::create_dir_all(&global_projects_dir).map_err(|e| {
         FileSystemError::new(
             &format!("Failed to create configuration directories ({e})"),
-            "~/.config/claudectl/projects/",
+            &global_projects_dir.to_string_lossy(),
         )
     })?;
 
@@ -67,16 +72,16 @@ pub fn read_local_config_file() -> FileSystemResult<String> {
 
     // Check if the configuration file exists
     if !config_file_path.exists() {
-        return Err(FileSystemError::new(
-            "Local configuration file does not exist. Please run `claudectl init` to create it.",
+        return Err(FileSystemError::config_not_found(
+            "Please run `claudectl init` to create it",
             "./.claudectl/config.json",
         ));
     }
 
     // Read the configuration file
     std::fs::read_to_string(&config_file_path).map_err(|e| {
-        FileSystemError::new(
-            &format!("Failed to read local configuration file ({e})"),
+        FileSystemError::read_failed(
+            &format!("IO error: {e}"),
             &config_file_path.to_string_lossy(),
         )
     })
@@ -88,9 +93,9 @@ pub fn write_local_config_file(config: String) -> FileSystemResult<()> {
 
     // Write the provided config to the file
     std::fs::write(&config_file_path, config).map_err(|e| {
-        FileSystemError::new(
-            &format!("Failed to write config to configuration file ({e})"),
-            "./.claudectl/config.json",
+        FileSystemError::write_failed(
+            &format!("IO error: {e}"),
+            &config_file_path.to_string_lossy(),
         )
     })?;
 
