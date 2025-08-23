@@ -4,5 +4,4 @@ pub mod errors;
 pub mod fs;
 pub mod git;
 pub mod icons;
-pub mod logging;
 pub mod output;
