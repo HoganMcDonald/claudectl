@@ -15,7 +15,7 @@ struct Cli {
     command: Option<commands::Commands>,
 
     /// Enable debug logging
-    #[arg(long, help = "Enable debug logging output")]
+    #[arg(long, global = true, help = "Enable debug logging output")]
     debug: bool,
 }
 
