@@ -1,6 +1,9 @@
 use crate::utils::icons::ICONS;
 use owo_colors::{OwoColorize, Rgb};
-use tabled::{Table, Tabled};
+use tabled::{
+    Table, Tabled,
+    settings::{Border, Modify, object::Rows, style::Style},
+};
 
 pub fn blank() {
     println!();
@@ -31,7 +34,11 @@ pub fn error(message: &str) {
 }
 
 pub fn table<T: Tabled>(data: &[T]) {
-    println!("{}", Table::new(data));
+    let mut table = Table::new(data);
+    table.with(Style::empty());
+    table.with(Modify::new(Rows::first()).with(Border::new().bottom('─')));
+
+    println!("{table}");
 }
 
 pub enum Position {
