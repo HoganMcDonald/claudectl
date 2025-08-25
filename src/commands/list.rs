@@ -1,4 +1,5 @@
 use clap::Args;
+use owo_colors::{OwoColorize, Rgb};
 use tabled::Tabled;
 use tracing::info;
 
@@ -36,13 +37,14 @@ impl ListCommand {
         })?;
 
         // 2. get status of each task (worktree)
+        let muted = Rgb(150, 150, 150);
         let data: Vec<TaskRow> = worktrees
             .into_iter()
             .map(|wt| TaskRow {
                 name: wt.branch.unwrap_or_else(|| "N/A".to_string()),
                 status: "active".to_string(), // Placeholder for status
                 commit: wt.commit,
-                worktree: wt.path,
+                worktree: wt.path.as_str().color(muted).to_string(),
             })
             .collect();
 
