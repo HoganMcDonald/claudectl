@@ -1,5 +1,6 @@
 use crate::utils::icons::ICONS;
 use owo_colors::{OwoColorize, Rgb};
+use tabled::{Table, Tabled};
 
 pub fn blank() {
     println!();
@@ -27,6 +28,10 @@ pub fn error(message: &str) {
         ICONS.status.failure.color(red).bold(),
         message.color(red)
     );
+}
+
+pub fn table<T: Tabled>(data: &[T]) {
+    println!("{}", Table::new(data));
 }
 
 pub enum Position {
