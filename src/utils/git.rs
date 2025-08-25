@@ -42,6 +42,58 @@ pub fn fetch_origin() -> GitResult<()> {
     Ok(())
 }
 
+pub struct Worktree {
+    pub path: String,
+    pub commit: String,
+    pub branch: Option<String>,
+}
+
+pub fn worktree_list() -> GitResult<Vec<Worktree>> {
+    let output = Command::new("git")
+        .args(["worktree", "list"])
+        .output()
+        .map_err(|e| {
+            GitError::new(
+                &format!("Failed to execute git worktree list command: {e}"),
+                GitAction::WorktreeList,
+            )
+        })?;
+
+    let stdout = String::from_utf8(output.stdout).map_err(|e| {
+        GitError::new(
+            &format!("Failed to parse output of git worktree list command: {e}"),
+            GitAction::WorktreeList,
+        )
+    })?;
+
+    let worktrees: Vec<Worktree> = stdout
+        .lines()
+        .filter_map(|line| {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let path = parts[0].to_string();
+                let commit = parts[1].to_string();
+                let branch =
+                    if parts.len() > 2 && parts[2].starts_with('[') && parts[2].ends_with(']') {
+                        Some(parts[2][1..parts[2].len() - 1].to_string()) // Remove brackets
+                    } else {
+                        None
+                    };
+
+                Some(Worktree {
+                    path,
+                    commit,
+                    branch,
+                })
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    Ok(worktrees)
+}
+
 pub fn worktree_exists(worktree_path: &str) -> GitResult<bool> {
     let output = Command::new("git")
         .args(["worktree", "list"])
