@@ -1,85 +1,121 @@
-# claudectl Development Guidelines
+# claudectl AI Development Context
 
-## Attribution
+## Attribution Rules
 - Never add Claude as a co-author on commits. Never mention Claude as an author of code or commits.
+- Do not reference AI assistance in code comments or documentation.
 
-## Testing Standards
+## Codebase Understanding
 
-### Testing Strategy
-We use a comprehensive testing approach with both unit and integration tests:
+### Project Purpose
+`claudectl` is a CLI tool for managing git worktrees and integrating with Claude Code for multi-task development workflows. It creates isolated workspaces for concurrent development tasks.
 
-- **Unit Tests**: Located within modules using `#[cfg(test)]` for testing individual functions and utilities
-- **Integration Tests**: Located in `tests/` directory using `assert_cmd` for end-to-end CLI testing
-- **Test Structure**: Follow the pattern `tests/integration/{command}.rs` for command-specific integration tests
+### Core Architecture Patterns
+- **Error Handling**: Uses hierarchical error types with `thiserror`. Always propagate errors with `?` operator
+- **CLI Structure**: Uses `clap` with derive macros. Commands are in `src/commands/` modules
+- **Output**: Consistent styling via `src/utils/output.rs` with Catppuccin theme colors
+- **Configuration**: JSON-based config stored via `directories` crate, managed in `src/utils/config.rs`
+- **Git Integration**: All git operations go through `src/utils/git.rs` with proper error handling
 
-### Test Requirements
-All new features must include:
+### Key Implementation Details
+- **Status Display**: Use `format_status()` function for consistent status formatting with colored icons
+- **Table Output**: Call `table(data, show_header)` - use `false` for minimal list displays
+- **Error Messages**: Always use structured error types, never panic or unwrap in commands
+- **File Operations**: Use `src/utils/fs.rs` functions for consistent file handling
+- **Git Commands**: Execute via `std::process::Command` with proper stderr capture and error conversion
 
-1. **Unit Tests** for utility functions and core logic
-   - Test both success and error cases  
-   - Test edge cases and boundary conditions
-   - Use descriptive test names like `test_format_status_ready()`
+## Code Implementation Guidelines
 
-2. **Integration Tests** for commands
-   - Test command execution with `assert_cmd::Command::cargo_bin()`
-   - Test error conditions (no git repo, no config, etc.)
-   - Test output format and content
-   - Use `tempfile::TempDir` for filesystem isolation
+### When Adding New Commands
+1. **Command Module**: Create in `src/commands/{command}.rs` with:
+   ```rust
+   use clap::Args;
+   use crate::commands::CommandResult;
+   
+   #[derive(Args)]
+   pub struct {Command}Command {
+       // Add fields for arguments
+   }
+   
+   impl {Command}Command {
+       pub fn execute(&self) -> CommandResult<()> {
+           // Implementation
+       }
+   }
+   ```
 
-3. **Mock External Dependencies** where possible
-   - Prefer testing logic over external command execution
-   - Use dependency injection for testability
-   - Mock file system operations when needed
+2. **Error Handling**: Always return `CommandResult<T>` and use `?` operator:
+   ```rust
+   let config = read_local_config_file()?;  // Don't unwrap()
+   let worktrees = worktree_list().inspect_err(|e| {
+       error(&format!("Failed to get tasks: {e}"));
+   })?;
+   ```
 
-### Test Organization
-```rust
-// Unit tests within modules
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[test]
-    fn test_specific_function() {
-        // Test implementation
-    }
-}
+3. **Register Command**: Add to `src/commands/mod.rs` in the `Commands` enum
 
-// Integration tests in tests/ directory
-use assert_cmd::Command;
-use tempfile::TempDir;
+### When Working with Output
+- **Colored Output**: Import `THEME` from `src/utils/theme.rs`
+- **Icons**: Import `ICONS` from `src/utils/icons.rs`
+- **Tables**: Use `table(&data, show_header)` from `src/utils/output.rs`
+- **Error Display**: Use `error()`, `success()`, `standard()` functions
 
-#[test]
-fn test_command_behavior() {
-    let temp_dir = TempDir::new().unwrap();
-    // Set up test environment
-    // Execute command
-    // Assert results
-}
-```
+### When Working with Git Operations
+- **All Git Commands**: Must go through `src/utils/git.rs` functions
+- **Error Conversion**: Git operations return `GitResult<T>` which auto-converts to `CommandError`
+- **Validation**: Always check `is_git_repository()` before git operations
 
-### Error Testing
-Always test error conditions:
-- Commands run outside git repositories
-- Missing configuration files
-- Invalid input parameters
-- External command failures
+### When Working with Configuration
+- **Reading Config**: Use `read_local_config_file()` from `src/utils/fs.rs`
+- **Config Types**: Use `Config::from_str()` for parsing JSON
+- **Error Handling**: Config errors auto-convert to `CommandError`
 
-### Output Testing
-For CLI output:
-- Test both stdout and stderr
-- Verify error messages are user-friendly
-- Test colored output contains expected ANSI codes
-- Verify table formatting and alignment
+### Testing Requirements for AI
+When implementing new features, ALWAYS add:
 
-### Running Tests
-- Unit tests: `cargo test`
-- Integration tests: `cargo test --test main`
-- Specific test: `cargo test test_name`
-- With output: `cargo test -- --nocapture`
+1. **Unit Tests**: In same file with `#[cfg(test)]`:
+   ```rust
+   #[cfg(test)]
+   mod tests {
+       use super::*;
+       
+       #[test]
+       fn test_function_name() {
+           // Test implementation
+       }
+   }
+   ```
 
-### Test Guidelines
-- Tests should be fast and deterministic
-- Use meaningful assertions with clear error messages
-- Clean up resources (tempfile handles this automatically)
-- Test names should describe what is being tested
-- Group related tests in modules
+2. **Integration Tests**: In `tests/integration/{command}.rs`:
+   ```rust
+   use assert_cmd::Command;
+   use tempfile::TempDir;
+   
+   #[test]
+   fn test_command_behavior() {
+       let temp_dir = TempDir::new().unwrap();
+       // Setup git repo: fs::create_dir(temp_dir.path().join(".git")).unwrap();
+       // Setup config: Create .claudectl/config.json
+       let mut cmd = Command::cargo_bin("claudectl").unwrap();
+       let output = cmd.arg("command").current_dir(&temp_dir).output().unwrap();
+       // Assertions
+   }
+   ```
+
+3. **Test Error Cases**: Always test:
+   - No git repository
+   - No configuration file  
+   - Invalid inputs
+   - External command failures
+
+### Quality Standards
+- **Before Committing**: Run `cargo fmt && cargo clippy && cargo test`
+- **Type Annotations**: Add explicit types when compiler inference fails
+- **Documentation**: Add doc comments to public functions
+- **No Panics**: Never use `unwrap()`, `expect()`, or `panic!()` in command implementations
+
+### Common Patterns to Follow
+- **Status Formatting**: Use `format_status(status: Status) -> String`
+- **File Operations**: Use functions from `src/utils/fs.rs`
+- **Logging**: Use `tracing::info!()` for debug information
+- **Color Theming**: Use `THEME.success`, `THEME.error`, etc. from theme module
+- **Icon Usage**: Use `ICONS.status.circle`, etc. from icons module
