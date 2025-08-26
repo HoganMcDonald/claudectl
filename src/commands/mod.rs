@@ -1,5 +1,6 @@
 pub mod init;
 pub mod list;
+pub mod rm;
 pub mod task;
 
 use crate::utils::errors::CommandError;
@@ -13,6 +14,8 @@ pub enum Commands {
     Task(task::TaskCommand),
     /// List all task worktrees
     List(list::ListCommand),
+    /// Remove a task worktree
+    Rm(rm::RmCommand),
 }
 
 pub fn handle_command(command: Commands) -> CommandResult<()> {
@@ -20,6 +23,7 @@ pub fn handle_command(command: Commands) -> CommandResult<()> {
         Commands::Init(cmd) => cmd.execute(),
         Commands::Task(cmd) => cmd.execute(),
         Commands::List(cmd) => cmd.execute(),
+        Commands::Rm(cmd) => cmd.execute(),
     }
 }
 
