@@ -2,7 +2,7 @@ use crate::utils::{icons::ICONS, theme::THEME};
 use owo_colors::OwoColorize;
 use tabled::{
     Table, Tabled,
-    settings::{Border, Modify, object::Rows, style::Style},
+    settings::{Border, Modify, Remove, object::Rows, style::Style},
 };
 
 pub fn blank() {
@@ -29,10 +29,15 @@ pub fn error(message: &str) {
     );
 }
 
-pub fn table<T: Tabled>(data: &[T]) {
+pub fn table<T: Tabled>(data: &[T], show_header: bool) {
     let mut table = Table::new(data);
     table.with(Style::empty());
-    table.with(Modify::new(Rows::first()).with(Border::new().bottom('─')));
+
+    if show_header {
+        table.with(Modify::new(Rows::first()).with(Border::new().bottom('─')));
+    } else {
+        table.with(Remove::row(Rows::first()));
+    }
 
     println!("{table}");
 }

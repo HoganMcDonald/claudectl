@@ -54,7 +54,7 @@ impl ListCommand {
             })
             .collect::<Result<Vec<_>, _>>()?;
 
-        table(&data);
+        table(&data, false);
 
         Ok(())
     }
