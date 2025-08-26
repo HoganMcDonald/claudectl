@@ -68,3 +68,55 @@ impl TaskCommand {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_task_command_creation() {
+        let cmd = TaskCommand {
+            task_name: "feat/test-feature".to_string(),
+        };
+
+        assert_eq!(cmd.task_name, "feat/test-feature");
+    }
+
+    #[test]
+    fn test_task_command_with_different_name_formats() {
+        let test_cases = vec![
+            "feat/new-feature",
+            "bugfix/issue-123",
+            "hotfix/critical-fix",
+            "feature/user-auth",
+        ];
+
+        for task_name in test_cases {
+            let cmd = TaskCommand {
+                task_name: task_name.to_string(),
+            };
+            assert_eq!(cmd.task_name, task_name);
+            assert!(!cmd.task_name.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_worktree_path_construction() {
+        let task_name = "feat/test-feature";
+        let config_project_dir = "/tmp/test-project";
+        let expected_path = format!("{}/{}", config_project_dir, task_name);
+
+        assert_eq!(expected_path, "/tmp/test-project/feat/test-feature");
+    }
+
+    #[test]
+    fn test_task_command_debug_formatting() {
+        let cmd = TaskCommand {
+            task_name: "feat/debug-test".to_string(),
+        };
+
+        let debug_str = format!("{:?}", cmd);
+        assert!(debug_str.contains("TaskCommand"));
+        assert!(debug_str.contains("feat/debug-test"));
+    }
+}

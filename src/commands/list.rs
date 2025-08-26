@@ -1,7 +1,7 @@
 use clap::Args;
 use owo_colors::OwoColorize;
 use tabled::Tabled;
-use tracing::info;
+use tracing::{info, instrument};
 
 use crate::{
     commands::CommandResult,
@@ -24,10 +24,11 @@ struct TaskRow {
     worktree: String,
 }
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct ListCommand {}
 
 impl ListCommand {
+    #[instrument(name = "list_command")]
     pub fn execute(&self) -> CommandResult<()> {
         info!("Executing list command.");
         let raw_config = read_local_config_file()?;
