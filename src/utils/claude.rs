@@ -1,6 +1,29 @@
 use crate::utils::errors::ClaudeError;
 
-pub fn is_claude_installed() -> Result<bool, ClaudeError> {
+type ClaudeResult<T> = Result<T, ClaudeError>;
+
+#[derive(Debug)]
+pub enum Status {
+    ///Ready for initial user input
+    Ready,
+    ///The agent is actively working
+    #[allow(dead_code)]
+    Working,
+    ///The agent is waiting for user input
+    #[allow(dead_code)]
+    Waiting,
+    ///Claudectl is unable to communicate with the agent process
+    #[allow(dead_code)]
+    Unknown,
+}
+
+pub struct Session {
+    #[allow(dead_code)]
+    pub name: String,
+    pub status: Status,
+}
+
+pub fn is_claude_installed() -> ClaudeResult<bool> {
     let output = std::process::Command::new("which")
         .arg("claude")
         .output()
@@ -13,6 +36,14 @@ pub fn is_claude_installed() -> Result<bool, ClaudeError> {
             "Claude is not installed or not found in PATH.",
         ))
     }
+}
+
+pub fn get_session(name: &str) -> ClaudeResult<Session> {
+    // TODO: actually find a running claude session
+    Ok(Session {
+        name: name.to_string(),
+        status: Status::Ready,
+    })
 }
 
 #[cfg(test)]

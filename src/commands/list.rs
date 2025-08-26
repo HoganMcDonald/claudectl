@@ -1,15 +1,18 @@
 use clap::Args;
-use owo_colors::{OwoColorize, Rgb};
+use owo_colors::OwoColorize;
 use tabled::Tabled;
 use tracing::info;
 
 use crate::{
     commands::CommandResult,
     utils::{
+        claude::{Status, get_session},
         config::Config,
         fs::read_local_config_file,
         git::worktree_list,
+        icons::ICONS,
         output::{error, table},
+        theme::THEME,
     },
 };
 
@@ -37,19 +40,37 @@ impl ListCommand {
         })?;
 
         // 2. get status of each task (worktree)
-        let muted = Rgb(150, 150, 150);
         let data: Vec<TaskRow> = worktrees
             .into_iter()
-            .map(|wt| TaskRow {
-                name: wt.branch.unwrap_or_else(|| "N/A".to_string()),
-                status: "active".to_string(), // Placeholder for status
-                commit: wt.commit,
-                worktree: wt.path.as_str().color(muted).to_string(),
+            .map(|wt| -> CommandResult<TaskRow> {
+                let name = wt.branch.unwrap_or_else(|| "N/A".to_string());
+                let session = get_session(name.as_str())?;
+                Ok(TaskRow {
+                    name: name.clone(),
+                    status: format_status(session.status),
+                    commit: wt.commit,
+                    worktree: wt.path.as_str().color(THEME.muted).to_string(),
+                })
             })
-            .collect();
+            .collect::<Result<Vec<_>, _>>()?;
 
         table(&data);
 
         Ok(())
     }
+}
+
+fn format_status(status: Status) -> String {
+    let color = match status {
+        Status::Ready => THEME.success,
+        Status::Working => THEME.warning,
+        Status::Waiting => THEME.info,
+        Status::Unknown => THEME.error,
+    };
+
+    format!(
+        "{} {}",
+        ICONS.status.circle.color(color),
+        format!("{status:?}").color(THEME.muted)
+    )
 }

@@ -5,6 +5,7 @@ pub struct Status {
     pub failure: &'static str,
     pub warning: &'static str,
     pub info: &'static str,
+    pub circle: &'static str,
 }
 
 pub struct Progress {
@@ -95,6 +96,7 @@ pub const ICONS: Icons = Icons {
         failure: "✗",
         warning: "⚠",
         info: "ℹ",
+        circle: "●",
     },
     progress: Progress {
         unicode: &SPINNER_UNICODE,
