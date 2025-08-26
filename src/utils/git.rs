@@ -156,6 +156,32 @@ pub fn create_worktree(branch_name: &str, worktree_path: &str) -> GitResult<()> 
     Ok(())
 }
 
+#[instrument(fields(worktree_path = %worktree_path))]
+pub fn remove_worktree(worktree_path: &str) -> GitResult<()> {
+    info!("Removing worktree at path: {}", worktree_path);
+    let output = Command::new("git")
+        .args(["worktree", "remove", worktree_path, "--force"])
+        .output()
+        .map_err(|e| {
+            GitError::new(
+                &format!("Failed to execute git worktree remove command: {e}"),
+                GitAction::WorktreeRemove,
+            )
+        })?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        warn!("Git worktree remove failed with stderr: {}", stderr);
+        return Err(GitError::new(
+            &format!("Git worktree remove failed: {stderr}"),
+            GitAction::WorktreeRemove,
+        ));
+    }
+
+    info!("Successfully removed worktree at: {}", worktree_path);
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
