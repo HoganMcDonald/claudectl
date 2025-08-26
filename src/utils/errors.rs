@@ -45,6 +45,9 @@ pub enum GitError {
 
     #[error("Failed to add worktree: {message}")]
     WorktreeAddFailed { message: String },
+
+    #[error("Failed to remove worktree: {message}")]
+    WorktreeRemoveFailed { message: String },
 }
 
 impl GitError {
@@ -55,6 +58,7 @@ impl GitError {
             GitAction::Fetch => Self::FetchFailed { message },
             GitAction::WorktreeList => Self::WorktreeListFailed { message },
             GitAction::WorktreeAdd => Self::WorktreeAddFailed { message },
+            GitAction::WorktreeRemove => Self::WorktreeRemoveFailed { message },
         }
     }
 }
@@ -67,6 +71,7 @@ pub enum GitAction {
     Fetch,
     WorktreeList,
     WorktreeAdd,
+    WorktreeRemove,
 }
 
 // =================================================
