@@ -71,6 +71,60 @@ fn format_status(status: Status) -> String {
     format!(
         "{} {}",
         ICONS.status.circle.color(color),
-        format!("{status:?}").color(THEME.muted)
+        format!("({status:?})").color(THEME.muted)
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_status_ready() {
+        let result = format_status(Status::Ready);
+
+        // Should contain the status text in parentheses
+        assert!(result.contains("(Ready)"));
+        // Should contain the circle icon
+        assert!(result.contains("●"));
+        // Should contain ANSI color codes
+        assert!(result.contains("\x1b["));
+    }
+
+    #[test]
+    fn test_format_status_working() {
+        let result = format_status(Status::Working);
+        assert!(result.contains("(Working)"));
+        assert!(result.contains("●"));
+    }
+
+    #[test]
+    fn test_format_status_waiting() {
+        let result = format_status(Status::Waiting);
+        assert!(result.contains("(Waiting)"));
+        assert!(result.contains("●"));
+    }
+
+    #[test]
+    fn test_format_status_unknown() {
+        let result = format_status(Status::Unknown);
+        assert!(result.contains("(Unknown)"));
+        assert!(result.contains("●"));
+    }
+
+    #[test]
+    fn test_task_row_creation() {
+        // Test that TaskRow can be created successfully
+        let task_row = TaskRow {
+            name: "test-task".to_string(),
+            status: "● (Ready)".to_string(),
+            commit: "abc1234".to_string(),
+            worktree: "/path/to/worktree".to_string(),
+        };
+
+        assert_eq!(task_row.name, "test-task");
+        assert_eq!(task_row.commit, "abc1234");
+        assert_eq!(task_row.worktree, "/path/to/worktree");
+        assert!(task_row.status.contains("Ready"));
+    }
 }
