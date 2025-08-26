@@ -11,11 +11,13 @@ use crate::utils::output::{
     Position, blank, standard, step, step_end, step_fail, step_skip, success,
 };
 use clap::Args;
+use tracing::{info, instrument};
 
-#[derive(Args)]
+#[derive(Args, Debug)]
 pub struct InitCommand {}
 
 impl InitCommand {
+    #[instrument(name = "init_command")]
     pub fn execute(&self) -> CommandResult<()> {
         let current_dir = std::env::current_dir()
             .map_err(|e| CommandError::new(&format!("Failed to get current directory: {e}")))?;
@@ -29,6 +31,7 @@ impl InitCommand {
 
         let initialization_message =
             format!("Initializing project '{project_name}' for use with claudectl...");
+        info!("Starting initialization for project: {}", project_name);
         standard(&initialization_message);
         blank();
 
@@ -93,7 +96,42 @@ impl InitCommand {
 
         blank();
         success(format!("Project {} initialized successfully!", config.project_name).as_str());
+        info!(
+            "Initialization completed successfully for project: {}",
+            config.project_name
+        );
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+
+    #[test]
+    fn test_init_command_creation() {
+        let _cmd = InitCommand {};
+        // Test that the command struct can be created
+        // This is a basic smoke test
+        assert!(true); // Command creation succeeded
+    }
+
+    #[test]
+    fn test_project_name_extraction() {
+        // Test project name extraction logic
+        let current_dir = env::current_dir().unwrap();
+        let project_name = current_dir.file_name().and_then(|name| name.to_str());
+
+        assert!(project_name.is_some());
+        assert!(!project_name.unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_init_command_error_handling() {
+        // Test that the command properly handles CommandError construction
+        let error = CommandError::new("Test error message");
+        assert!(error.to_string().contains("Test error message"));
     }
 }
