@@ -216,10 +216,10 @@ _claudectl_tasks() {
   local cmd_output
   
   # Try to get tasks, with timeout and error handling
-  if cmd_output=$(timeout 3 claudectl list 2>/dev/null); then
+  if cmd_output=\$(timeout 3 claudectl list 2>/dev/null); then
     # Extract task names from claudectl list output (first column, skip empty lines and headers)
-    tasks=($(echo "$cmd_output" | awk 'NF > 0 && $1 !~ /^[●◯]/ && NR > 1 {print $1}' | head -20))
-    if [ ${#tasks[@]} -gt 0 ]; then
+    tasks=(\$(echo "\$cmd_output" | awk 'NF > 0 && \$1 !~ /^[●◯]/ && NR > 1 {print \$1}' | head -20))
+    if [ \${#tasks[@]} -gt 0 ]; then
       _describe 'available tasks' tasks
       return 0
     fi
@@ -230,7 +230,7 @@ _claudectl_tasks() {
 }`;
       
       // Insert the function before the final compdef
-      content = content.replace(/^if \[ "\$funcstack\[1\]" = "_claudectl" \]; then/m, dynamicFunction + '\n\nif [ "$funcstack[1]" = "_claudectl" ]; then');
+      content = content.replace(/^if \[ "\$funcstack\[1\]" = "_claudectl" \]; then/m, dynamicFunction + '\n\nif [ "\\$funcstack[1]" = "_claudectl" ]; then');
     } else if (shell === 'bash') {
       // For bash, add basic dynamic completion
       const bashFunction = `
@@ -239,8 +239,8 @@ _claudectl_tasks() {
   local cur="\${COMP_WORDS[COMP_CWORD]}"
   local tasks
   
-  if tasks=$(timeout 3 claudectl list 2>/dev/null | awk 'NF > 0 && NR > 1 {print $1}' | head -20); then
-    COMPREPLY=($(compgen -W "$tasks" -- "$cur"))
+  if tasks=\$(timeout 3 claudectl list 2>/dev/null | awk 'NF > 0 && NR > 1 {print \$1}' | head -20); then
+    COMPREPLY=(\$(compgen -W "\$tasks" -- "\$cur"))
   fi
 }`;
       
