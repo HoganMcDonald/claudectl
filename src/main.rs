@@ -9,7 +9,7 @@ mod utils;
 #[command(name = "claudectl")]
 #[command(
     about = "A CLI tool for orchestrating Claude Code agents through the use of git worktrees.",
-    help_template = "{about}\n\nUsage: {usage}\n\nCommands:\n  init         Initialize the project for claudectl\n  task         Create a new task worktree\n  list         List all task worktrees\n  rm           Remove a task worktree\n\nUtility:\n  completions  Generate shell completions\n  repair       Repair shell completions and configuration\n  help         Print this message or the help of the given subcommand(s)\n\n{options}"
+    help_template = "{about}\n\nUsage: claudectl [OPTIONS] [COMMAND]\n\nCommands:\n  init         Initialize the project for claudectl\n  task         Create a new task worktree\n  list         List all task worktrees\n  rm           Remove a task worktree\n\nUtility:\n  completions  Generate shell completions\n  repair       Repair shell completions and configuration\n  help         Print this message or the help of the given subcommand(s)\n\n{options}"
 )]
 pub struct Cli {
     #[command(subcommand)]
