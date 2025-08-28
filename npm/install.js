@@ -204,8 +204,8 @@ function patchCompletionFile(filePath, shell) {
       // Replace the static task_name completion with dynamic completion
       // Target specifically the rm command's task_name completion
       content = content.replace(
-        /(rm\)\s*\n[^;]+':task_name:')([^']+)/,
-        '$1_claudectl_tasks$2'
+        /(':task_name:)'/g,
+        '$1_claudectl_tasks\''
       );
       
       // Add the dynamic completion function with error handling
@@ -218,7 +218,7 @@ _claudectl_tasks() {
   # Try to get tasks, with timeout and error handling
   if cmd_output=\$(timeout 3 claudectl list 2>/dev/null); then
     # Extract task names from claudectl list output (first column, skip empty lines and headers)
-    tasks=(\$(echo "\$cmd_output" | awk 'NF > 0 && \$1 !~ /^[●◯]/ && NR > 1 {print \$1}' | head -20))
+    tasks=(\$(echo "\$cmd_output" | awk 'NF > 0 && NR > 1 {print \$1}' | head -20))
     if [ \${#tasks[@]} -gt 0 ]; then
       _describe 'available tasks' tasks
       return 0
