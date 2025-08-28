@@ -249,6 +249,7 @@ jobs:
           chmod +x npm/bin/*
           
           # Copy updated completions
+          mkdir -p completions
           cp -r artifacts/completions/* completions/
           
       - name: Verify package contents
