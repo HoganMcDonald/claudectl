@@ -204,7 +204,7 @@ function patchCompletionFile(filePath, shell) {
       // Replace the static task_name completion with dynamic completion
       // Target specifically the rm command's task_name completion
       content = content.replace(
-        /(':task_name:)'/g,
+        /(rm\)\s*[\s\S]*?':task_name:)'/,
         '$1_claudectl_tasks\''
       );
       
@@ -212,25 +212,30 @@ function patchCompletionFile(filePath, shell) {
       const dynamicFunction = `
 # Dynamic task completion function with error handling
 _claudectl_tasks() {
-  local tasks
+  local tasks task_names
   local cmd_output
   
-  # Try to get tasks, with timeout and error handling
-  if cmd_output=\$(timeout 3 claudectl list 2>/dev/null); then
+  # Try to get tasks without timeout first, then with timeout if available
+  if cmd_output=\$(claudectl list 2>/dev/null); then
     # Extract task names from claudectl list output (first column, skip empty lines and headers)
-    tasks=(\$(echo "\$cmd_output" | awk 'NF > 0 && NR > 1 {print \$1}' | head -20))
-    if [ \${#tasks[@]} -gt 0 ]; then
+    task_names=(\$(echo "\$cmd_output" | awk 'NF > 0 && NR > 1 {print \$1}' | head -20))
+    
+    if [ \${#task_names[@]} -gt 0 ]; then
+      # Convert array to format expected by _describe
+      for task_name in "\${task_names[@]}"; do
+        tasks+=("\$task_name:task")
+      done
       _describe 'available tasks' tasks
       return 0
     fi
   fi
   
-  # Fallback to default completion if claudectl fails
-  _default
+  # If no tasks found, just complete with nothing  
+  return 1
 }`;
       
       // Insert the function before the final compdef
-      content = content.replace(/^if \[ "\$funcstack\[1\]" = "_claudectl" \]; then/m, dynamicFunction + '\n\nif [ "\\$funcstack[1]" = "_claudectl" ]; then');
+      content = content.replace(/^if \[ "\$funcstack\[1\]" = "_claudectl" \]; then/m, dynamicFunction + '\n\nif [ "$funcstack[1]" = "_claudectl" ]; then');
     } else if (shell === 'bash') {
       // For bash, add basic dynamic completion
       const bashFunction = `
