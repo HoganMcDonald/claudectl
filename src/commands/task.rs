@@ -104,7 +104,7 @@ mod tests {
     fn test_worktree_path_construction() {
         let task_name = "feat/test-feature";
         let config_project_dir = "/tmp/test-project";
-        let expected_path = format!("{}/{}", config_project_dir, task_name);
+        let expected_path = format!("{config_project_dir}/{task_name}");
 
         assert_eq!(expected_path, "/tmp/test-project/feat/test-feature");
     }
@@ -115,7 +115,7 @@ mod tests {
             task_name: "feat/debug-test".to_string(),
         };
 
-        let debug_str = format!("{:?}", cmd);
+        let debug_str = format!("{cmd:?}");
         assert!(debug_str.contains("TaskCommand"));
         assert!(debug_str.contains("feat/debug-test"));
     }
