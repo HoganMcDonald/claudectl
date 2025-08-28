@@ -113,8 +113,7 @@ fn test_list_command_output_format() {
                 // and status indicators (colored circles)
                 assert!(
                     trimmed.len() > 20, // Data lines should be substantial
-                    "Line too short to be data: '{}'",
-                    trimmed
+                    "Line too short to be data: '{trimmed}'"
                 );
             }
         }

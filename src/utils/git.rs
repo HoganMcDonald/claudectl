@@ -203,8 +203,8 @@ mod tests {
         let _ = std::env::set_current_dir(&original_dir);
 
         match result {
-            Ok(value) => assert_eq!(value, true),
-            Err(e) => panic!("Expected Ok but got Err: {:?}", e),
+            Ok(value) => assert!(value),
+            Err(e) => panic!("Expected Ok but got Err: {e:?}"),
         }
     }
 
@@ -222,8 +222,8 @@ mod tests {
         let _ = std::env::set_current_dir(&original_dir);
 
         match result {
-            Ok(value) => assert_eq!(value, false),
-            Err(e) => panic!("Expected Ok(false) but got Err: {:?}", e),
+            Ok(value) => assert!(!value),
+            Err(e) => panic!("Expected Ok(false) but got Err: {e:?}"),
         }
     }
 

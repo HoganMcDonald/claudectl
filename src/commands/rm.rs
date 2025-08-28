@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use clap::Args;
+use clap::{Args, ValueHint};
 use owo_colors::OwoColorize;
 use tracing::{error, info, instrument, warn};
 
@@ -28,6 +28,7 @@ pub struct RmCommand {
     /// The name of the task/branch to remove
     #[arg(
         value_parser = task_name_parser,
+        value_hint = ValueHint::Other,
         help = "The name of the task to remove"
     )]
     pub task_name: String,
