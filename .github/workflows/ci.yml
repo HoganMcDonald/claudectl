@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, rust ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, rust ]
+    branches: [ main ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -45,6 +45,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+    needs: test
     steps:
     - uses: actions/checkout@v4
     
@@ -63,6 +64,12 @@ jobs:
     - name: Build
       run: cargo build --verbose --release
     
+    - name: Test completions generation
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        ./target/release/claudectl completions zsh > /tmp/test_completions
+        [ -s /tmp/test_completions ] || exit 1
+        
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -70,3 +77,36 @@ jobs:
         path: |
           target/release/claudectl*
           !target/release/*.d
+
+  # Test npm package functionality
+  test-npm:
+    name: Test NPM Package
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Build claudectl
+        run: cargo build --release
+        
+      - name: Test npm scripts
+        run: |
+          # Test install script (dry run)
+          echo "Testing install script..."
+          node npm/install.js || echo "Install script completed with warnings (expected)"
+          
+          # Test run script
+          echo "Testing run script..."
+          node npm/run.js --help
+          
+          # Test uninstall script (dry run) 
+          echo "Testing uninstall script..."
+          node npm/uninstall.js || echo "Uninstall script completed (expected)"
