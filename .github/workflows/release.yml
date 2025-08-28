@@ -165,14 +165,12 @@ jobs:
       - name: Build claudectl
         run: cargo build --release
         
-      - name: Generate completions
+      - name: Generate completions (already done by build.rs)
         run: |
-          mkdir -p completions
-          ./target/release/claudectl completions bash > completions/claudectl.bash
-          ./target/release/claudectl completions zsh > completions/_claudectl  
-          ./target/release/claudectl completions fish > completions/claudectl.fish
-          ./target/release/claudectl completions powershell > completions/_claudectl.ps1
-          ./target/release/claudectl completions elvish > completions/claudectl.elv
+          # Completions are generated automatically by build.rs during cargo build
+          ls -la completions/
+          echo "Completion files generated:"
+          find completions/ -name "*" -type f
           
       - name: Upload completions
         uses: actions/upload-artifact@v3

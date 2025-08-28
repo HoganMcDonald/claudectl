@@ -9,7 +9,7 @@
   "scripts": {
     "postinstall": "node npm/install.js",
     "preuninstall": "node npm/uninstall.js",
-    "dev:completions": "cargo build --release && ./target/release/claudectl completions zsh > completions/_claudectl && cp completions/_claudectl ~/.zsh_completion.d/ && exec zsh",
+    "dev:completions": "cargo build --release && mkdir -p ~/.zsh_completion.d && ./target/release/claudectl completions zsh > ~/.zsh_completion.d/_claudectl && exec zsh",
     "setup": "node npm/install.js",
     "setup:verify": "claudectl completions --verify || echo 'Run: npm run setup to repair'",
     "setup:repair": "claudectl repair"
