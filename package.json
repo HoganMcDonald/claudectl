@@ -1,6 +1,6 @@
 {
   "name": "claudectl",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A CLI tool for orchestrating Claude Code agents through the use of git worktrees",
   "main": "npm/run.js",
   "bin": {

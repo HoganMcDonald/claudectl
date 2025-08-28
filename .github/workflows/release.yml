@@ -237,7 +237,8 @@ jobs:
           cp artifacts/claudectl-linux-x64/claudectl-linux-x64 target/release/claudectl
           chmod +x target/release/claudectl
           
-          # Copy all platform binaries to npm directory
+          # Ensure npm directory exists and copy platform binaries
+          # The npm directory should already exist with install.js, uninstall.js, run.js
           mkdir -p npm/bin
           cp artifacts/claudectl-linux-x64/claudectl-linux-x64 npm/bin/claudectl-linux-x64
           cp artifacts/claudectl-linux-arm64/claudectl-linux-arm64 npm/bin/claudectl-linux-arm64
@@ -256,10 +257,27 @@ jobs:
         run: |
           echo "Package contents:"
           ls -la target/release/
+          ls -la npm/
           ls -la npm/bin/
           ls -la completions/
           
           echo "Package version: $(node -p 'require("./package.json").version')"
+          
+          # Verify critical npm files exist
+          echo "Verifying npm scripts:"
+          if [ -f npm/install.js ]; then
+            echo "✓ npm/install.js exists"
+          else
+            echo "✗ npm/install.js missing"
+            exit 1
+          fi
+          
+          if [ -f npm/run.js ]; then
+            echo "✓ npm/run.js exists"  
+          else
+            echo "✗ npm/run.js missing"
+            exit 1
+          fi
           
       - name: Publish to npm
         run: npm publish --access public
