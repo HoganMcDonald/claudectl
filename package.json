@@ -1,0 +1,51 @@
+{
+  "name": "claudectl",
+  "version": "0.2.0",
+  "description": "A CLI tool for orchestrating Claude Code agents through the use of git worktrees",
+  "main": "npm/run.js",
+  "bin": {
+    "claudectl": "./npm/run.js"
+  },
+  "scripts": {
+    "postinstall": "node npm/install.js",
+    "preuninstall": "node npm/uninstall.js",
+    "dev:completions": "cargo build --release && ./target/release/claudectl completions zsh > completions/_claudectl && cp completions/_claudectl ~/.zsh_completion.d/ && exec zsh",
+    "setup": "node npm/install.js",
+    "setup:verify": "claudectl completions --verify || echo 'Run: npm run setup to repair'",
+    "setup:repair": "claudectl repair"
+  },
+  "files": [
+    "npm/",
+    "completions/",
+    "target/release/claudectl"
+  ],
+  "keywords": [
+    "cli",
+    "git",
+    "worktree",
+    "claude",
+    "productivity"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/claudectl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/claudectl/issues"
+  },
+  "homepage": "https://github.com/yourusername/claudectl#readme",
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+}
