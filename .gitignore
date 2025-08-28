@@ -33,5 +33,7 @@ Thumbs.db
 
 
 # Added by cargo
-
 /target
+
+# Generated completion files
+completions/
